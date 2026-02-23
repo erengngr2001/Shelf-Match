@@ -41,3 +41,15 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Board
+    uniqueID: 1871222303
+    locked: 0
+  - name: Object
+    uniqueID: 1055214225
+    locked: 0
+  - name: Vfx
+    uniqueID: 2200104635
+    locked: 0
+  - name: UI
+    uniqueID: 2730649505
+    locked: 0

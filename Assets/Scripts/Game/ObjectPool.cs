@@ -106,6 +106,10 @@ namespace Game
             if (_pool.Contains(obj))
                 throw new Exception($"Double release detected for {obj.name}!");
 #endif
+            
+            if (obj is IPoolable poolable)
+                poolable.OnRelease();
+            
             obj.gameObject.SetActive(false);
             obj.transform.SetParent(_parent);
             _pool.Add(obj);

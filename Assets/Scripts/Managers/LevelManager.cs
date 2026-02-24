@@ -1,4 +1,8 @@
+using System;
+using System.Collections.Generic;
+using Level.Shelf;
 using UnityEngine;
+using UnityEngine.Pool;
 
 namespace Managers
 {
@@ -16,6 +20,7 @@ namespace Managers
 
         [Header("References")]
         public ShelfManager ShelfManager;
+        public ObjectManager ObjectManager;
         
         public LevelState State { get; private set; }
         
@@ -28,13 +33,43 @@ namespace Managers
             else 
                 Destroy(gameObject);
         }
+        
+        
+        // Parse the text (e.g., "[3,2],[3,2],[3,2]")
+        private void ParseLevelData(string rawText, List<ShelfData> dataList)
+        {
+            var cleanText = rawText.Trim().Replace(" ", "");
+            var shelfStrings = cleanText.Split(new[] { "],[" }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var s in shelfStrings)
+            {
+                var cleanPair = s.Replace("[", "").Replace("]", "");
+                var values = cleanPair.Split(',');
+
+                if (values.Length == 2 && int.TryParse(values[0], out int width) && int.TryParse(values[1], out int layers))
+                {
+                    dataList.Add(new ShelfData(width, layers));
+                }
+            }
+        }
 
         public void StartLevel(int levelNumber)
         {
             State = LevelState.Initializing;
             _currentLevelNumber = levelNumber;
 
-            ShelfManager.LoadLevel(_currentLevelNumber);
+            var levelFile = Resources.Load<TextAsset>($"Levels/level{levelNumber}");
+            if (levelFile == null)
+            {
+                Debug.LogError($"level{levelNumber} not found!");
+                return;
+            }
+
+            using var _ = ListPool<ShelfData>.Get(out var parsedData);
+            
+            ParseLevelData(levelFile.text, parsedData);
+            ShelfManager.GenerateShelves(parsedData);
+            ObjectManager.GenerateItems(parsedData, ShelfManager.ActiveShelves);
             
             State = LevelState.Playing;
         }

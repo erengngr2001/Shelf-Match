@@ -1,5 +1,6 @@
-using System.Collections.Generic;
+using Game;
 using UnityEngine;
+using UnityEngine.Pool;
 
 namespace Level.Objects
 {
@@ -7,10 +8,11 @@ namespace Level.Objects
     {
         Front,
         Back,
+        Hidden,
         MovingToStack
     }
     
-    public class ObjectView : MonoBehaviour
+    public class ObjectView : MonoBehaviour, IPoolable
     {
         public SpriteRenderer Renderer;
         public PolygonCollider2D Collider;
@@ -22,6 +24,7 @@ namespace Level.Objects
         public bool IsInteractable;
 
         public int ShelfIndex;
+        public int GridX;
         public int LayerIndex;
 
         private bool _firstInitialization = true;
@@ -29,19 +32,19 @@ namespace Level.Objects
         private readonly Color32 FRONT_COLOR = new (255, 255, 255, 255);
         private readonly Color32 BACK_COLOR = new (125, 125, 125, 255);
         
-        public void Init(ObjectId id, Sprite itemSprite, Vector3 spawnPosition, int shelfIndex, int layerIndex)
+        public void Init(ObjectId id, Sprite itemSprite, Vector3 spawnPosition, int shelfIndex, int gridX, int layerIndex)
         {
             Id = id;
             OriginalShelfPosition = spawnPosition;
-            transform.position = spawnPosition;
+            transform.localPosition = spawnPosition;
             ShelfIndex = shelfIndex;
+            GridX = gridX;
             LayerIndex = layerIndex;
             // todo: SetState by checking layerIndex (whether it is front or back)
             
             Renderer.sprite = itemSprite;
 
-            // todo: pool list
-            var points = new List<Vector2>();
+            using var _ = ListPool<Vector2>.Get(out var points);
             itemSprite.GetPhysicsShape(0, points);
             Collider.SetPath(0, points);
 
@@ -53,7 +56,10 @@ namespace Level.Objects
 
         public void OnRelease()
         {
+            transform.localScale = Vector3.one;
             
+            IsInteractable = false;
+            Collider.enabled = false;
         }
         
         /// <summary>
@@ -68,8 +74,14 @@ namespace Level.Objects
             switch (State)
             {
                 case ObjectState.Front:
+                    IsInteractable = false;
+                    Collider.enabled = false;
+                    break;
                 case ObjectState.Back:
                 case ObjectState.MovingToStack:
+                    break;
+                case ObjectState.Hidden:
+                    Renderer.enabled = true;
                     break;
             }
 
@@ -82,13 +94,12 @@ namespace Level.Objects
                     Renderer.color = FRONT_COLOR;
                     break;
                 case ObjectState.Back:
-                    IsInteractable = false;
-                    Collider.enabled = false;
                     Renderer.color = BACK_COLOR;
                     break;
+                case ObjectState.Hidden:
+                    Renderer.enabled = false;
+                    break;
                 case ObjectState.MovingToStack:
-                    IsInteractable = false;
-                    Collider.enabled = false;
                     Renderer.color = FRONT_COLOR;
                     break;
             }

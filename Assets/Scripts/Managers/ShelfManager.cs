@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Managers
 {
-    public class ShelfManager : MonoBehaviour
+    public class ShelfManager : MonoBehaviour, IManualUpdate
     {
         [Header("References")]
         public Transform EnvironmentContainer;
@@ -18,6 +18,11 @@ namespace Managers
 
         public List<ShelfView> ActiveShelves { get; private set; } = new List<ShelfView>();
 
+        public void ManualUpdate()
+        {
+            // Frame-by-frame shelf logic (animations etc.) will go here
+        }
+        
         public void GenerateShelves(List<ShelfData> shelfDataList)
         {
             ClearShelves();

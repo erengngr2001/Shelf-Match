@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Game;
 using Level.Shelf;
 using UnityEngine;
 using UnityEngine.Pool;
@@ -14,7 +15,7 @@ namespace Managers
         Fail
     }
 
-    public class LevelManager : MonoBehaviour
+    public class LevelManager : MonoBehaviour, IManualUpdate
     {
         public static LevelManager Instance { get; private set; }
 
@@ -34,6 +35,14 @@ namespace Managers
                 Destroy(gameObject);
         }
         
+        public void ManualUpdate()
+        {
+            if (State != LevelState.Playing)
+                return;
+
+            ShelfManager.ManualUpdate();
+            ObjectManager.ManualUpdate();
+        }
         
         // Parse the text (e.g., "[3,2],[3,2],[3,2]")
         private void ParseLevelData(string rawText, List<ShelfData> dataList)

@@ -29,6 +29,13 @@ namespace Managers
             // todo: maybe add a main menu for levels?
             PlayCurrentLevel();
         }
+        
+        private void Update()
+        {
+            // InputManager.ManualUpdate();
+            LevelManager.ManualUpdate();
+            // StackManager.ManualUpdate();
+        }
 
         private void PlayCurrentLevel()
         {

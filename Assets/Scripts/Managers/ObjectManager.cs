@@ -7,7 +7,7 @@ using UnityEngine.Pool;
 
 namespace Managers
 {
-    public class ObjectManager : MonoBehaviour
+    public class ObjectManager : MonoBehaviour, IManualUpdate
     {
         private struct ShelfSlotPointer
         {
@@ -36,6 +36,11 @@ namespace Managers
         private void Awake()
         {
             LoadItemSprites();
+        }
+        
+        public void ManualUpdate()
+        {
+            // Frame-by-frame object logic (animations etc.) will go here
         }
         
         public void GenerateItems(List<ShelfData> shelfDataList, List<ShelfView> activeShelves)

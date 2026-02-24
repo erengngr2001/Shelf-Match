@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
+using Game;
 using Level.Shelf;
 using UnityEngine;
+using UnityEngine.Pool;
 
 namespace Managers
 {
     public class ShelfManager : MonoBehaviour
     {
         [Header("References")]
-        public ShelfView ShelfPrefab;
         public Transform EnvironmentContainer;
 
         [Header("Layout Settings")]
@@ -31,18 +32,16 @@ namespace Managers
                 return;
             }
 
-            var parsedData = ParseLevelData(levelFile.text);
-
+            using var _ = ListPool<ShelfData>.Get(out var parsedData);
+            ParseLevelData(levelFile.text, parsedData);
             GenerateShelves(parsedData);
         }
 
         // Parse the text (e.g., "[3,2],[3,2],[3,2]")
-        private List<ShelfData> ParseLevelData(string rawText)
+        private void ParseLevelData(string rawText, List<ShelfData> dataList)
         {
-            var dataList = new List<ShelfData>();
-            
             var cleanText = rawText.Trim().Replace(" ", "");
-            var shelfStrings = cleanText.Split(new[] { "],[" }, System.StringSplitOptions.RemoveEmptyEntries);
+            var shelfStrings = cleanText.Split(new[] { "],[" }, StringSplitOptions.RemoveEmptyEntries);
 
             foreach (var s in shelfStrings)
             {
@@ -54,8 +53,6 @@ namespace Managers
                     int.TryParse(values[1], out int layers))
                     dataList.Add(new ShelfData(width, layers));
             }
-
-            return dataList;
         }
 
         private void GenerateShelves(List<ShelfData> shelfDataList)
@@ -77,15 +74,13 @@ namespace Managers
                 if (currentShelfWidth > maxActualWidth)
                     maxActualWidth = currentShelfWidth;
 
-                // Calculate position
                 var spawnPos = new Vector3(0, startY - (i * ShelfSpacingY), 0);
                 
-                // Instantiate
-                // todo: pool as next step
-                var newShelf = Instantiate(ShelfPrefab, spawnPos, Quaternion.identity, EnvironmentContainer);
+                var newShelf = GamePools.Instance.ShelfViewPool.Get();
+                newShelf.transform.SetParent(EnvironmentContainer);
+                newShelf.transform.position = spawnPos;
                 newShelf.gameObject.name = $"Shelf_{i}";
             
-                // Initialize
                 newShelf.Init(i, data, ItemVisualWidth);
                 ActiveShelves.Add(newShelf);
             }
@@ -104,9 +99,8 @@ namespace Managers
         {
             foreach (var shelf in ActiveShelves)
             {
-                // todo: pool as next step
                 if (shelf != null)
-                    Destroy(shelf.gameObject);
+                    GamePools.Instance.ShelfViewPool.Release(shelf);
             }
             
             ActiveShelves.Clear();

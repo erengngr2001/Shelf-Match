@@ -69,12 +69,6 @@ namespace Managers
                     slot.Shelf.AddObject(obj, slot.X, slot.Layer);
                 }
             }
-            
-            // Route the visual update command to the ShelfManager!
-            foreach (var shelf in activeShelves)
-            {
-                GameManager.Instance.LevelManager.ShelfManager.UpdateShelfVisuals(shelf, false);
-            }
         }
 
         private void CalculateColumnDepths(List<ShelfView> activeShelves, int totalItems)
@@ -129,16 +123,6 @@ namespace Managers
                     }
                 }
             }
-        }
-
-        public void ExtractObject(ObjectView targetObj)
-        {
-            GameManager.Instance.LevelManager.ShelfManager.ExtractObjectFromShelf(targetObj.ParentShelf, targetObj);
-        }
-
-        public void UndoObjectPlacement(ObjectView returningObj)
-        {
-            GameManager.Instance.LevelManager.ShelfManager.UndoObjectPlacementOnShelf(returningObj.ParentShelf, returningObj);
         }
 
         public void ClearItems()

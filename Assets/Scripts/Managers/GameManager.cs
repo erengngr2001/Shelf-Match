@@ -50,14 +50,12 @@ namespace Managers
             // StackManager.ManualUpdate();
         }
         
+        // todo: This is not GameManager's job! Put it into LevelManager
         private void HandleObjectTapped(Level.Objects.ObjectView clickedObj)
         {
-            Debug.Log($"[TAP] Extracted '{clickedObj.Id.Value}' from Shelf {clickedObj.ShelfIndex}");
+            Debug.Log($"[TAP] Extracted '{clickedObj.Id.Value}' from Shelf {clickedObj.ParentShelf.ShelfIndex}");
             
-            // 1. Remove from logical grid and uncover back layers
             LevelManager.ObjectManager.ExtractObject(clickedObj);
-            
-            // 2. TODO: Send to StackManager
             // StackManager.AddItem(clickedObj);
         }
 

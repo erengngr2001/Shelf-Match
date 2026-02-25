@@ -1,4 +1,5 @@
 using Game;
+using Level.Shelf;
 using PrimeTween;
 using UnityEngine;
 using UnityEngine.Pool;
@@ -22,25 +23,21 @@ namespace Level.Objects
         public ObjectState State { get; private set; }
 
         public ObjectId Id;
-        public Vector3 OriginalShelfPosition;
         public bool IsInteractable;
 
-        public int ShelfIndex;
+        public ShelfView ParentShelf { get; private set; }
         public int GridX;
         public int LayerIndex;
 
-        private bool _firstInitialization = true;
-        
         private readonly Color32 FRONT_COLOR = new (255, 255, 255, 255);
         private readonly Color32 BACK_COLOR = new (125, 125, 125, 255);
         
-        public void Init(ObjectId id, Sprite itemSprite, int shelfIndex, int gridX, int layerIndex)
+        public void Init(ObjectId id, Sprite itemSprite, ShelfView parentShelf, int gridX, int layerIndex)
         {
-            // todo: never directly modify the State
-            State = ObjectState.None;
+            SetState(ObjectState.None);
             
             Id = id;
-            ShelfIndex = shelfIndex;
+            ParentShelf = parentShelf;
             GridX = gridX;
             LayerIndex = layerIndex;
             
@@ -50,40 +47,21 @@ namespace Level.Objects
             itemSprite.GetPhysicsShape(0, points);
             Collider.SetPath(0, points);
 
-            if (!_firstInitialization)
-                transform.localScale = Vector3.one; 
-            
-            _firstInitialization = false;
-
-            // switch (layerIndex)
-            // {
-            //     case 0:
-            //         SetState(ObjectState.Front);
-            //         break;
-            //     case 1:
-            //         SetState(ObjectState.Back);
-            //         break;
-            //     default:
-            //         SetState(ObjectState.Hidden);
-            //         break;
-            // }
             Renderer.sortingOrder = -layerIndex;
         }
         
         public void MoveToLocalPosition(Vector3 targetPos, bool animate)
         {
-            Tween.StopAll(transform); // Prevent tweens from fighting
+            // todo: should not be needing this
+            if (transform.localPosition == targetPos)
+                return;
+
+            Tween.StopAll(transform);
             
             if (animate)
-            {
-                // Smoothly slide the object to its new active layer position
                 Tween.LocalPosition(transform, targetPos, duration: 0.35f, ease: Ease.OutQuad);
-            }
             else
-            {
-                // Instantly snap to position (used during initial level generation)
                 transform.localPosition = targetPos;
-            }
         }
 
         public void OnRelease()
@@ -127,6 +105,7 @@ namespace Level.Objects
                     Renderer.color = FRONT_COLOR;
                     break;
                 case ObjectState.Back:
+                    Collider.enabled = false;
                     Renderer.color = BACK_COLOR;
                     break;
                 case ObjectState.Hidden:

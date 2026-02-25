@@ -643,8 +643,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ItemVisualWidth: 9
-  ItemOffsetY: -6
-  LayerOffset: {x: 0.5, y: 0.5, z: 0}
 --- !u!1 &1458789628
 GameObject:
   m_ObjectHideFlags: 0
@@ -819,6 +817,8 @@ MonoBehaviour:
   ItemVisualWidth: 9
   MaxPlayAreaWidth: 40
   MaxPlayAreaHeight: 55
+  ItemOffsetY: -6
+  LayerOffset: {x: 0.5, y: 0.5, z: 0}
 --- !u!1 &2022402943
 GameObject:
   m_ObjectHideFlags: 0

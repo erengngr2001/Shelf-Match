@@ -576,6 +576,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1181889099}
+  - component: {fileID: 1181889100}
   m_Layer: 0
   m_Name: StackManager
   m_TagString: Untagged
@@ -598,6 +599,24 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1074771209}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1181889100
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1181889098}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 312e2b838a77ec343bccbbc5e4515c62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  StackSlots:
+  - {fileID: 1150053409}
+  - {fileID: 1458789629}
+  - {fileID: 2022402944}
+  - {fileID: 96995276}
+  - {fileID: 227798982}
 --- !u!1 &1314514851
 GameObject:
   m_ObjectHideFlags: 0
@@ -720,6 +739,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShelfManager: {fileID: 1871292672}
   ObjectManager: {fileID: 1314514853}
+  StackManager: {fileID: 1181889100}
 --- !u!1 &1685966550
 GameObject:
   m_ObjectHideFlags: 0
@@ -767,7 +787,7 @@ MonoBehaviour:
   PoolsData: {fileID: 11400000, guid: 3b9b902fd6307a44193b59078b07ce04, type: 2}
   LevelManager: {fileID: 1499957001}
   InputManager: {fileID: 1164590076}
-  CurrentLevel: 1
+  CurrentLevel: 3
 --- !u!1 &1871292670
 GameObject:
   m_ObjectHideFlags: 0

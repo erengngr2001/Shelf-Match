@@ -13,7 +13,7 @@ namespace Level.Objects
         Front,
         Back,
         Hidden,
-        MovingToStack
+        Collected
     }
     
     public class ObjectView : MonoBehaviour, IPoolable, IInteractable
@@ -97,7 +97,7 @@ namespace Level.Objects
                     Collider.enabled = false;
                     break;
                 case ObjectState.Back:
-                case ObjectState.MovingToStack:
+                case ObjectState.Collected:
                 case ObjectState.None:
                     break;
                 case ObjectState.Hidden:
@@ -120,7 +120,7 @@ namespace Level.Objects
                 case ObjectState.Hidden:
                     Renderer.enabled = false;
                     break;
-                case ObjectState.MovingToStack:
+                case ObjectState.Collected:
                     Renderer.color = FRONT_COLOR;
                     break;
                 case ObjectState.None:

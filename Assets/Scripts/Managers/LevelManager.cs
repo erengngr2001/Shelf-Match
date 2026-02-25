@@ -23,10 +23,12 @@ namespace Managers
         [Header("References")]
         public ShelfManager ShelfManager;
         public ObjectManager ObjectManager;
+        public StackManager StackManager;
         
         public LevelState State { get; private set; }
         
         private int _currentLevelNumber;
+        private int _totalItemsRemainingInLevel;
 
         private void Awake()
         {
@@ -55,6 +57,7 @@ namespace Managers
 
             ShelfManager.ManualUpdate();
             ObjectManager.ManualUpdate();
+            StackManager.ManualUpdate();
         }
         
         // Parse the text (e.g., "[3,2],[3,2],[3,2]")
@@ -93,7 +96,7 @@ namespace Managers
             ParseLevelData(levelFile.text, parsedData);
             
             ShelfManager.GenerateShelves(parsedData);
-            ObjectManager.GenerateItems(parsedData, ShelfManager.ActiveShelves);
+            _totalItemsRemainingInLevel = ObjectManager.GenerateItems(parsedData, ShelfManager.ActiveShelves);
             ShelfManager.UpdateAllShelvesVisuals();
             
             State = LevelState.Playing;
@@ -104,10 +107,13 @@ namespace Managers
             if (State != LevelState.Playing) 
                 return;
             
+            if (StackManager.IsFull) 
+                return;
+            
             Debug.Log($"[TAP] Extracted '{clickedObj.Id.Value}' from Shelf {clickedObj.ParentShelf.ShelfIndex}");
             
             ShelfManager.ExtractObjectFromShelf(clickedObj.ParentShelf, clickedObj);
-            // StackManager.AddItem(clickedObj);
+            StackManager.AddItem(clickedObj);
         }
 
         private void HandleObjectHeld(ObjectView heldObj)
@@ -116,6 +122,12 @@ namespace Managers
                 return;
             
             Debug.Log($"[HOLD] Player is inspecting '{heldObj.Id.Value}'");
+        }
+        
+        public void OnItemsMatched(int count) 
+        {
+            _totalItemsRemainingInLevel -= count;
+            CheckWinCondition(_totalItemsRemainingInLevel);
         }
 
         public void RestartLevel()

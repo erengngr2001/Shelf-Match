@@ -32,7 +32,7 @@ namespace Managers
             // Frame-by-frame object logic (animations etc.) will go here
         }
         
-        public void GenerateItems(List<ShelfData> shelfDataList, List<ShelfView> activeShelves)
+        public int GenerateItems(List<ShelfData> shelfDataList, List<ShelfView> activeShelves)
         {
             _activeShelves = activeShelves;
             ClearItems();
@@ -69,6 +69,8 @@ namespace Managers
                     slot.Shelf.AddObject(obj, slot.X, slot.Layer);
                 }
             }
+            
+            return totalItemsToPlace;
         }
 
         private void CalculateColumnDepths(List<ShelfView> activeShelves, int totalItems)

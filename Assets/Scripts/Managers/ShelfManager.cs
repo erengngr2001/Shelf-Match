@@ -66,7 +66,7 @@ namespace Managers
         public void ExtractObjectFromShelf(ShelfView shelf, ObjectView obj)
         {
             shelf.Grid[obj.GridX, obj.LayerIndex] = null;
-            obj.SetState(ObjectState.MovingToStack);
+            obj.SetState(ObjectState.Collected);
             
             UpdateShelfVisuals(shelf, true);
         }

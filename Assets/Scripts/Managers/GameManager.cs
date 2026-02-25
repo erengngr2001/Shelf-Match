@@ -10,6 +10,7 @@ namespace Managers
         [Header("Core References")]
         public GamePools PoolsData;
         public LevelManager LevelManager;
+        public InputManager InputManager;
 
         [Header("User Data")]
         public int CurrentLevel = 1;
@@ -26,15 +27,44 @@ namespace Managers
         {
             PoolsData.Init();
             
+            InputManager.OnObjectTapped += HandleObjectTapped;
+            InputManager.OnObjectHeld += HandleObjectHeld;
+            
             // todo: maybe add a main menu for levels?
             PlayCurrentLevel();
         }
         
+        private void OnDestroy()
+        {
+            if (InputManager != null)
+            {
+                InputManager.OnObjectTapped -= HandleObjectTapped;
+                InputManager.OnObjectHeld -= HandleObjectHeld;
+            }
+        }
+        
         private void Update()
         {
-            // InputManager.ManualUpdate();
+            InputManager.ManualUpdate();
             LevelManager.ManualUpdate();
             // StackManager.ManualUpdate();
+        }
+        
+        private void HandleObjectTapped(Level.Objects.ObjectView clickedObj)
+        {
+            Debug.Log($"[TAP] Extracted '{clickedObj.Id.Value}' from Shelf {clickedObj.ShelfIndex}");
+            
+            // 1. Remove from logical grid and uncover back layers
+            LevelManager.ObjectManager.ExtractObject(clickedObj);
+            
+            // 2. TODO: Send to StackManager
+            // StackManager.AddItem(clickedObj);
+        }
+
+        private void HandleObjectHeld(Level.Objects.ObjectView heldObj)
+        {
+            Debug.Log($"[HOLD] Player is inspecting '{heldObj.Id.Value}'");
+            // You can use this later to trigger a wobble animation, show an info tooltip, etc.
         }
 
         private void PlayCurrentLevel()

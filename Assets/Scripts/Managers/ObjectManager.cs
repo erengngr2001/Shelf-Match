@@ -86,14 +86,14 @@ namespace Managers
                     
                     var finalLocalPos = new Vector3(posX, posY, 0f);
                     
-                    obj.Init(id, randomSprite, finalLocalPos, slot.ShelfIndex, slot.X, slot.Layer);
+                    obj.Init(id, randomSprite, slot.ShelfIndex, slot.X, slot.Layer);
                     obj.Renderer.sortingOrder = -slot.Layer;
 
                     _board[slot.ShelfIndex, slot.X, slot.Layer] = obj;
                 }
             }
             
-            UpdateBoardVisuals();
+            UpdateBoardVisuals(false);
         }
 
         private void CalculateColumnDepths(List<ShelfData> shelfDataList, int totalItems)
@@ -151,16 +151,70 @@ namespace Managers
             }
         }
 
-        public void UpdateBoardVisuals()
+        // public void UpdateBoardVisuals()
+        // {
+        //     // Loop through each shelf individually
+        //     for (var shelf = 0; shelf < _activeShelfCount; shelf++)
+        //     {
+        //         var currentActiveLayer = -1;
+        //         
+        //         for (var layer = 0; layer < MAX_LAYERS; layer++)
+        //         {
+        //             var hasItems = false;
+        //             
+        //             for (var x = 0; x < _activeShelfWidths[shelf]; x++)
+        //             {
+        //                 if (_board[shelf, x, layer] != null)
+        //                 {
+        //                     hasItems = true;
+        //                     break;
+        //                 }
+        //             }
+        //             
+        //             // If we found an item, this layer is the front-most for this shelf
+        //             if (hasItems)
+        //             {
+        //                 currentActiveLayer = layer;
+        //                 break;
+        //             }
+        //         }
+        //
+        //         // If the shelf has no items left at all, skip visual updates for it
+        //         if (currentActiveLayer == -1) 
+        //             continue;
+        //
+        //         for (var x = 0; x < _activeShelfWidths[shelf]; x++)
+        //         {
+        //             var maxDepth = _columnMaxDepths[shelf, x];
+        //             
+        //             for (var layer = 0; layer < maxDepth; layer++)
+        //             {
+        //                 var obj = _board[shelf, x, layer];
+        //                 
+        //                 if (obj == null)
+        //                     continue;
+        //                 
+        //                 // Apply the state dynamically
+        //                 if (layer == currentActiveLayer) 
+        //                     obj.SetState(ObjectState.Front);
+        //                 else if (layer == currentActiveLayer + 1) 
+        //                     obj.SetState(ObjectState.Back);
+        //                 else 
+        //                     obj.SetState(ObjectState.Hidden);
+        //             }
+        //         }
+        //     }
+        // }
+        
+        public void UpdateBoardVisuals(bool animate = true)
         {
-            var currentActiveLayer = -1;
-            
-            for (var layer = 0; layer < MAX_LAYERS; layer++)
+            for (var shelf = 0; shelf < _activeShelfCount; shelf++)
             {
-                var hasItems = false;
+                var currentActiveLayer = -1;
                 
-                for (var shelf = 0; shelf < _activeShelfCount; shelf++)
+                for (var layer = 0; layer < MAX_LAYERS; layer++)
                 {
+                    var hasItems = false;
                     for (var x = 0; x < _activeShelfWidths[shelf]; x++)
                     {
                         if (_board[shelf, x, layer] != null)
@@ -170,22 +224,19 @@ namespace Managers
                         }
                     }
                     
-                    if (hasItems) 
+                    if (hasItems)
+                    {
+                        currentActiveLayer = layer;
                         break;
+                    }
                 }
-                
-                if (hasItems)
-                {
-                    currentActiveLayer = layer;
-                    break;
-                }
-            }
 
-            if (currentActiveLayer == -1) 
-                return;
+                if (currentActiveLayer == -1) 
+                    continue;
 
-            for (var shelf = 0; shelf < _activeShelfCount; shelf++)
-            {
+                // Calculate the true center X for this specific shelf layout
+                var startX = -(_activeShelfWidths[shelf] - 1) * ItemVisualWidth / 2f;
+
                 for (var x = 0; x < _activeShelfWidths[shelf]; x++)
                 {
                     var maxDepth = _columnMaxDepths[shelf, x];
@@ -193,16 +244,30 @@ namespace Managers
                     for (var layer = 0; layer < maxDepth; layer++)
                     {
                         var obj = _board[shelf, x, layer];
-                        
                         if (obj == null)
                             continue;
                         
-                        if (layer == currentActiveLayer) 
+                        var relativeDepth = layer - currentActiveLayer;
+                        
+                        // 1. Assign Visual/Interactive States
+                        if (relativeDepth == 0) 
                             obj.SetState(ObjectState.Front);
-                        else if (layer == currentActiveLayer + 1) 
+                        else if (relativeDepth == 1) 
                             obj.SetState(ObjectState.Back);
                         else 
                             obj.SetState(ObjectState.Hidden);
+
+                        // 2. Calculate offset positions (Capping relative depth at 2)
+                        // This guarantees all Hidden objects share the exact same physical depth as the Back object
+                        var visualDepth = Mathf.Min(relativeDepth, 2);
+                        
+                        var posX = startX + (x * ItemVisualWidth);
+                        var posY = ItemOffsetY + (visualDepth * LayerOffset.y);
+                        
+                        var targetPos = new Vector3(posX, posY, 0f);
+
+                        // 3. Move the object
+                        obj.MoveToLocalPosition(targetPos, animate);
                     }
                 }
             }

@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 6864674627965935621}
   - component: {fileID: 3693968204204786318}
   - component: {fileID: 6338296673729585214}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: ObjectView
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -103,6 +103,7 @@ MonoBehaviour:
   OriginalShelfPosition: {x: 0, y: 0, z: 0}
   IsInteractable: 0
   ShelfIndex: 0
+  GridX: 0
   LayerIndex: 0
 --- !u!60 &6338296673729585214
 PolygonCollider2D:

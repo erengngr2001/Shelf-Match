@@ -11,27 +11,16 @@ namespace Managers
     {
         private struct ShelfSlotPointer
         {
-            public int ShelfIndex;
+            public ShelfView Shelf;
             public int X;
             public int Layer;
         }
 
         [Header("Placement Settings")]
         public float ItemVisualWidth;
-        public float ItemOffsetY;
-        public Vector3 LayerOffset;
-
-        private const int MAX_SHELVES = 10;
-        private const int MAX_WIDTH = 10;
-        private const int MAX_LAYERS = 8;
-
-        private readonly ObjectView[,,] _board = new ObjectView[MAX_SHELVES, MAX_WIDTH, MAX_LAYERS];
-        private readonly int[,] _columnMaxDepths = new int[MAX_SHELVES, MAX_WIDTH];
         
-        private int _activeShelfCount;
-        private readonly int[] _activeShelfWidths = new int[MAX_SHELVES];
-
         private List<Sprite> _availableItemSprites = new List<Sprite>();
+        private List<ShelfView> _activeShelves;
 
         private void Awake()
         {
@@ -45,26 +34,21 @@ namespace Managers
         
         public void GenerateItems(List<ShelfData> shelfDataList, List<ShelfView> activeShelves)
         {
+            _activeShelves = activeShelves;
             ClearItems();
 
-            _activeShelfCount = shelfDataList.Count;
             var totalSlots = 0;
-
-            for (var i = 0; i < _activeShelfCount; i++)
+            foreach (var shelf in activeShelves)
             {
-                var data = shelfDataList[i];
-                
-                _activeShelfWidths[i] = data.Width;
-                
-                totalSlots += data.Width * data.LayerCount;
+                // shelf.SetupGrid() is already called by ShelfManager during Generation!
+                totalSlots += shelf.Data.Width * shelf.Data.LayerCount;
             }
 
-            var totalTriplets = totalSlots / 3;
-            var totalItemsToPlace = totalTriplets * 3;
+            var totalItemsToPlace = (totalSlots / 3) * 3;
 
-            CalculateColumnDepths(shelfDataList, totalItemsToPlace);
+            CalculateColumnDepths(activeShelves, totalItemsToPlace);
 
-            for (var triplet = 0; triplet < totalTriplets; triplet++)
+            for (var triplet = 0; triplet < totalItemsToPlace / 3; triplet++)
             {
                 var randomSprite = _availableItemSprites[Random.Range(0, _availableItemSprites.Count)];
                 var id = new ObjectId(randomSprite.name);
@@ -72,50 +56,47 @@ namespace Managers
                 for (var i = 0; i < 3; i++)
                 {
                     using var _ = ListPool<ShelfSlotPointer>.Get(out var openSlots);
-                    GetAvailableBackmostSlots(openSlots);
+                    GetAvailableBackmostSlots(activeShelves, openSlots);
                     
+                    if (openSlots.Count == 0) break;
+
                     var slot = openSlots[Random.Range(0, openSlots.Count)];
                     var obj = GamePools.Instance.ObjectViewPool.Get();
                     
-                    var parentShelf = activeShelves[slot.ShelfIndex];
-                    obj.transform.SetParent(parentShelf.ItemContainer.transform, false);
-                    
-                    var startX = -(shelfDataList[slot.ShelfIndex].Width - 1) * ItemVisualWidth / 2f;
-                    var posX = startX + (slot.X * ItemVisualWidth);
-                    var posY = ItemOffsetY + (slot.Layer * LayerOffset.y);
-                    
-                    var finalLocalPos = new Vector3(posX, posY, 0f);
-                    
-                    obj.Init(id, randomSprite, finalLocalPos, slot.ShelfIndex, slot.X, slot.Layer);
-                    obj.Renderer.sortingOrder = -slot.Layer;
+                    obj.transform.SetParent(slot.Shelf.ItemContainer.transform, false);
+                    obj.Init(id, randomSprite, slot.Shelf, slot.X, slot.Layer);
 
-                    _board[slot.ShelfIndex, slot.X, slot.Layer] = obj;
+                    slot.Shelf.AddObject(obj, slot.X, slot.Layer);
                 }
             }
             
-            UpdateBoardVisuals();
+            // Route the visual update command to the ShelfManager!
+            foreach (var shelf in activeShelves)
+            {
+                GameManager.Instance.LevelManager.ShelfManager.UpdateShelfVisuals(shelf, false);
+            }
         }
 
-        private void CalculateColumnDepths(List<ShelfData> shelfDataList, int totalItems)
+        private void CalculateColumnDepths(List<ShelfView> activeShelves, int totalItems)
         {
-            for (var shelf = 0; shelf < _activeShelfCount; shelf++)
-            for (var x = 0; x < _activeShelfWidths[shelf]; x++)
-            {
-                _columnMaxDepths[shelf, x] = 0;
-            }
+            foreach (var shelf in activeShelves)
+                for (var x = 0; x < shelf.Data.Width; x++) 
+                    shelf.SetColumnDepth(x, 0);
 
             var currentLayer = 0;
             var itemsLeft = totalItems;
 
             while (itemsLeft > 0)
             {
-                for (var shelf = 0; shelf < _activeShelfCount; shelf++)
-                for (var x = 0; x < _activeShelfWidths[shelf] && itemsLeft > 0; x++)
+                foreach (var shelf in activeShelves)
                 {
-                    if (currentLayer < shelfDataList[shelf].LayerCount)
+                    for (var x = 0; x < shelf.Data.Width && itemsLeft > 0; x++)
                     {
-                        _columnMaxDepths[shelf, x]++;
-                        itemsLeft--;
+                        if (currentLayer < shelf.Data.LayerCount)
+                        {
+                            shelf.SetColumnDepth(x, shelf.GetColumnDepth(x) + 1);
+                            itemsLeft--;
+                        }
                     }
                 }
                 
@@ -123,23 +104,22 @@ namespace Managers
             }
         }
 
-        private void GetAvailableBackmostSlots(List<ShelfSlotPointer> results)
+        private void GetAvailableBackmostSlots(List<ShelfView> activeShelves, List<ShelfSlotPointer> results)
         {
             results.Clear();
             
-            for (var shelf = 0; shelf < _activeShelfCount; shelf++)
+            foreach (var shelf in activeShelves)
             {
-                for (var x = 0; x < _activeShelfWidths[shelf]; x++)
+                for (var x = 0; x < shelf.Data.Width; x++)
                 {
-                    var maxDepth = _columnMaxDepths[shelf, x];
-                    
+                    var maxDepth = shelf.GetColumnDepth(x);
                     for (var layer = maxDepth - 1; layer >= 0; layer--)
                     {
-                        if (_board[shelf, x, layer] == null)
+                        if (shelf.IsSlotEmpty(x, layer))
                         {
                             results.Add(new ShelfSlotPointer
                             {
-                                ShelfIndex = shelf, 
+                                Shelf = shelf, 
                                 X = x, 
                                 Layer = layer
                             });
@@ -151,117 +131,20 @@ namespace Managers
             }
         }
 
-        public void UpdateBoardVisuals()
-        {
-            var currentActiveLayer = -1;
-            
-            for (var layer = 0; layer < MAX_LAYERS; layer++)
-            {
-                var hasItems = false;
-                
-                for (var shelf = 0; shelf < _activeShelfCount; shelf++)
-                {
-                    for (var x = 0; x < _activeShelfWidths[shelf]; x++)
-                    {
-                        if (_board[shelf, x, layer] != null)
-                        {
-                            hasItems = true;
-                            break;
-                        }
-                    }
-                    
-                    if (hasItems) 
-                        break;
-                }
-                
-                if (hasItems)
-                {
-                    currentActiveLayer = layer;
-                    break;
-                }
-            }
-
-            if (currentActiveLayer == -1) 
-                return;
-
-            for (var shelf = 0; shelf < _activeShelfCount; shelf++)
-            {
-                for (var x = 0; x < _activeShelfWidths[shelf]; x++)
-                {
-                    var maxDepth = _columnMaxDepths[shelf, x];
-                    
-                    for (var layer = 0; layer < maxDepth; layer++)
-                    {
-                        var obj = _board[shelf, x, layer];
-                        
-                        if (obj == null)
-                            continue;
-                        
-                        if (layer == currentActiveLayer) 
-                            obj.SetState(ObjectState.Front);
-                        else if (layer == currentActiveLayer + 1) 
-                            obj.SetState(ObjectState.Back);
-                        else 
-                            obj.SetState(ObjectState.Hidden);
-                    }
-                }
-            }
-        }
-
         public void ExtractObject(ObjectView targetObj)
         {
-            var shelf = targetObj.ShelfIndex;
-            var x = targetObj.GridX;
-            var layer = targetObj.LayerIndex;
-
-            _board[shelf, x, layer] = null;
-            
-            targetObj.SetState(ObjectState.MovingToStack);
-            
-            UpdateBoardVisuals();
+            GameManager.Instance.LevelManager.ShelfManager.ExtractObjectFromShelf(targetObj.ParentShelf, targetObj);
         }
 
         public void UndoObjectPlacement(ObjectView returningObj)
         {
-            var shelf = returningObj.ShelfIndex;
-            var x = returningObj.GridX;
-            var layer = returningObj.LayerIndex;
-
-            _board[shelf, x, layer] = returningObj;
-            returningObj.transform.localPosition = returningObj.OriginalShelfPosition;
-            
-            UpdateBoardVisuals();
-        }
-
-        public int GetTotalObjectsOnShelf(int shelfIndex)
-        {
-            var count = 0;
-            
-            for (var x = 0; x < _activeShelfWidths[shelfIndex]; x++)
-            for (var layer = 0; layer < _columnMaxDepths[shelfIndex, x]; layer++)
-            {
-                if (_board[shelfIndex, x, layer] != null) 
-                    count++;
-            }
-            
-            return count;
+            GameManager.Instance.LevelManager.ShelfManager.UndoObjectPlacementOnShelf(returningObj.ParentShelf, returningObj);
         }
 
         public void ClearItems()
         {
-            for (var shelf = 0; shelf < _activeShelfCount; shelf++)
-            for (var x = 0; x < _activeShelfWidths[shelf]; x++)
-            {
-                var maxDepth = _columnMaxDepths[shelf, x];
-                for (var layer = 0; layer < maxDepth; layer++)
-                {
-                    if (_board[shelf, x, layer] == null)
-                        continue;
-                    
-                    GamePools.Instance.ObjectViewPool.Release(_board[shelf, x, layer]);
-                    _board[shelf, x, layer] = null;
-                }
-            }
+            foreach (var shelf in _activeShelves)
+                shelf.ClearShelf(GamePools.Instance.ObjectViewPool);
         }
 
         private void LoadItemSprites()

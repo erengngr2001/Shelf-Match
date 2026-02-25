@@ -1,4 +1,6 @@
 using Game;
+using Level.Shelf;
+using PrimeTween;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -6,6 +8,7 @@ namespace Level.Objects
 {
     public enum ObjectState
     {
+        None,
         Front,
         Back,
         Hidden,
@@ -20,27 +23,23 @@ namespace Level.Objects
         public ObjectState State { get; private set; }
 
         public ObjectId Id;
-        public Vector3 OriginalShelfPosition;
         public bool IsInteractable;
 
-        public int ShelfIndex;
+        public ShelfView ParentShelf { get; private set; }
         public int GridX;
         public int LayerIndex;
 
-        private bool _firstInitialization = true;
-        
         private readonly Color32 FRONT_COLOR = new (255, 255, 255, 255);
         private readonly Color32 BACK_COLOR = new (125, 125, 125, 255);
         
-        public void Init(ObjectId id, Sprite itemSprite, Vector3 spawnPosition, int shelfIndex, int gridX, int layerIndex)
+        public void Init(ObjectId id, Sprite itemSprite, ShelfView parentShelf, int gridX, int layerIndex)
         {
+            SetState(ObjectState.None);
+            
             Id = id;
-            OriginalShelfPosition = spawnPosition;
-            transform.localPosition = spawnPosition;
-            ShelfIndex = shelfIndex;
+            ParentShelf = parentShelf;
             GridX = gridX;
             LayerIndex = layerIndex;
-            // todo: SetState by checking layerIndex (whether it is front or back)
             
             Renderer.sprite = itemSprite;
 
@@ -48,18 +47,29 @@ namespace Level.Objects
             itemSprite.GetPhysicsShape(0, points);
             Collider.SetPath(0, points);
 
-            if (!_firstInitialization)
-                transform.localScale = Vector3.one; 
+            Renderer.sortingOrder = -layerIndex;
+        }
+        
+        public void MoveToLocalPosition(Vector3 targetPos, bool animate)
+        {
+            // todo: should not be needing this
+            if (transform.localPosition == targetPos)
+                return;
+
+            Tween.StopAll(transform);
             
-            _firstInitialization = false;
+            if (animate)
+                Tween.LocalPosition(transform, targetPos, duration: 0.35f, ease: Ease.OutQuad);
+            else
+                transform.localPosition = targetPos;
         }
 
         public void OnRelease()
         {
+            Tween.StopAll(transform);
             transform.localScale = Vector3.one;
             
-            IsInteractable = false;
-            Collider.enabled = false;
+            SetState(ObjectState.None);
         }
         
         /// <summary>
@@ -79,6 +89,7 @@ namespace Level.Objects
                     break;
                 case ObjectState.Back:
                 case ObjectState.MovingToStack:
+                case ObjectState.None:
                     break;
                 case ObjectState.Hidden:
                     Renderer.enabled = true;
@@ -94,6 +105,7 @@ namespace Level.Objects
                     Renderer.color = FRONT_COLOR;
                     break;
                 case ObjectState.Back:
+                    Collider.enabled = false;
                     Renderer.color = BACK_COLOR;
                     break;
                 case ObjectState.Hidden:
@@ -101,6 +113,10 @@ namespace Level.Objects
                     break;
                 case ObjectState.MovingToStack:
                     Renderer.color = FRONT_COLOR;
+                    break;
+                case ObjectState.None:
+                    IsInteractable = false;
+                    Collider.enabled = false;
                     break;
             }
             

@@ -27,20 +27,8 @@ namespace Managers
         {
             PoolsData.Init();
             
-            InputManager.OnObjectTapped += HandleObjectTapped;
-            InputManager.OnObjectHeld += HandleObjectHeld;
-            
             // todo: maybe add a main menu for levels?
             PlayCurrentLevel();
-        }
-        
-        private void OnDestroy()
-        {
-            if (InputManager != null)
-            {
-                InputManager.OnObjectTapped -= HandleObjectTapped;
-                InputManager.OnObjectHeld -= HandleObjectHeld;
-            }
         }
         
         private void Update()
@@ -48,21 +36,6 @@ namespace Managers
             InputManager.ManualUpdate();
             LevelManager.ManualUpdate();
             // StackManager.ManualUpdate();
-        }
-        
-        // todo: This is not GameManager's job! Put it into LevelManager
-        private void HandleObjectTapped(Level.Objects.ObjectView clickedObj)
-        {
-            Debug.Log($"[TAP] Extracted '{clickedObj.Id.Value}' from Shelf {clickedObj.ParentShelf.ShelfIndex}");
-            
-            LevelManager.ObjectManager.ExtractObject(clickedObj);
-            // StackManager.AddItem(clickedObj);
-        }
-
-        private void HandleObjectHeld(Level.Objects.ObjectView heldObj)
-        {
-            Debug.Log($"[HOLD] Player is inspecting '{heldObj.Id.Value}'");
-            // You can use this later to trigger a wobble animation, show an info tooltip, etc.
         }
 
         private void PlayCurrentLevel()

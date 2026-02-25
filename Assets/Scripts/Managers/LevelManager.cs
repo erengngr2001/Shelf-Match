@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Game;
+using Level.Objects;
 using Level.Shelf;
 using UnityEngine;
 using UnityEngine.Pool;
@@ -35,6 +36,18 @@ namespace Managers
                 Destroy(gameObject);
         }
         
+        private void OnEnable()
+        {
+            ObjectView.OnTapped += HandleObjectTapped;
+            ObjectView.OnHeld += HandleObjectHeld;
+        }
+
+        private void OnDisable()
+        {
+            ObjectView.OnTapped -= HandleObjectTapped;
+            ObjectView.OnHeld -= HandleObjectHeld;
+        }
+        
         public void ManualUpdate()
         {
             if (State != LevelState.Playing)
@@ -55,7 +68,9 @@ namespace Managers
                 var cleanPair = s.Replace("[", "").Replace("]", "");
                 var values = cleanPair.Split(',');
 
-                if (values.Length == 2 && int.TryParse(values[0], out int width) && int.TryParse(values[1], out int layers))
+                if (values.Length == 2 && 
+                    int.TryParse(values[0], out int width) && 
+                    int.TryParse(values[1], out int layers))
                 {
                     dataList.Add(new ShelfData(width, layers));
                 }
@@ -75,12 +90,32 @@ namespace Managers
             }
 
             using var _ = ListPool<ShelfData>.Get(out var parsedData);
-            
             ParseLevelData(levelFile.text, parsedData);
+            
             ShelfManager.GenerateShelves(parsedData);
             ObjectManager.GenerateItems(parsedData, ShelfManager.ActiveShelves);
+            ShelfManager.UpdateAllShelvesVisuals();
             
             State = LevelState.Playing;
+        }
+        
+        private void HandleObjectTapped(ObjectView clickedObj)
+        {
+            if (State != LevelState.Playing) 
+                return;
+            
+            Debug.Log($"[TAP] Extracted '{clickedObj.Id.Value}' from Shelf {clickedObj.ParentShelf.ShelfIndex}");
+            
+            ShelfManager.ExtractObjectFromShelf(clickedObj.ParentShelf, clickedObj);
+            // StackManager.AddItem(clickedObj);
+        }
+
+        private void HandleObjectHeld(ObjectView heldObj)
+        {
+            if (State != LevelState.Playing) 
+                return;
+            
+            Debug.Log($"[HOLD] Player is inspecting '{heldObj.Id.Value}'");
         }
 
         public void RestartLevel()

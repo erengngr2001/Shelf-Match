@@ -1,6 +1,4 @@
-using System;
 using Game;
-using Level.Objects;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -9,42 +7,24 @@ namespace Managers
     public class InputManager : MonoBehaviour, IManualUpdate
     {
         public LayerMask InteractableLayerMask;
-        
-        [Tooltip("How long in seconds before a tap becomes a hold")]
         public float HoldDurationThreshold; 
-        
-        [Tooltip("If the finger moves this many pixels, cancel the input (swipe/drag)")]
         public float DragCancelThreshold; 
-
-        public event Action<ObjectView> OnObjectTapped;
-        public event Action<ObjectView> OnObjectHeld;
-
         public Camera MainCamera;
         
-        // State Machine Trackers
         private bool _isPointerDown;
         private float _pointerDownTimer;
         private Vector2 _pointerDownPosition;
         private bool _holdTriggered;
-        private ObjectView _hoveredObject;
+        private IInteractable _hoveredInteractable;
 
         public void ManualUpdate()
         {
-            if (GameManager.Instance.LevelManager.State != LevelState.Playing)
-                return;
-            
             if (Input.GetMouseButtonDown(0))
-            {
                 HandlePointerDown(Input.mousePosition);
-            }
             else if (Input.GetMouseButton(0))
-            {
                 HandlePointerHeld(Input.mousePosition);
-            }
             else if (Input.GetMouseButtonUp(0))
-            {
                 HandlePointerUp();
-            }
         }
 
         private void HandlePointerDown(Vector2 screenPosition)
@@ -57,15 +37,15 @@ namespace Managers
             var hitCollider = Physics2D.OverlapPoint(worldPosition, InteractableLayerMask);
 
             if (hitCollider != null && 
-                hitCollider.TryGetComponent<ObjectView>(out var clickedObject))
+                hitCollider.TryGetComponent<IInteractable>(out var interactable))
             {
-                if (clickedObject.IsInteractable)
+                if (interactable.CanInteract)
                 {
                     _isPointerDown = true;
                     _holdTriggered = false;
                     _pointerDownTimer = 0f;
                     _pointerDownPosition = screenPosition;
-                    _hoveredObject = clickedObject;
+                    _hoveredInteractable = interactable;
                 }
             }
         }
@@ -73,7 +53,7 @@ namespace Managers
         private void HandlePointerHeld(Vector2 currentScreenPosition)
         {
             if (!_isPointerDown || 
-                _hoveredObject == null) 
+                _hoveredInteractable == null) 
                 return;
 
             // If the user drags their finger too far, they are probably trying to swipe, so cancel the click
@@ -90,10 +70,8 @@ namespace Managers
                 !_holdTriggered)
             {
                 _holdTriggered = true;
-                
-                OnObjectHeld?.Invoke(_hoveredObject);
-                
-                _hoveredObject = null; 
+                _hoveredInteractable.InteractHeld();
+                _hoveredInteractable = null; 
             }
         }
 
@@ -104,8 +82,8 @@ namespace Managers
 
             // If the finger came up, and we didn't hold long enough, it's a tap
             if (!_holdTriggered && 
-                _hoveredObject != null)
-                OnObjectTapped?.Invoke(_hoveredObject);
+                _hoveredInteractable != null)
+                _hoveredInteractable.InteractTapped();
 
             CancelInput();
         }
@@ -113,7 +91,7 @@ namespace Managers
         private void CancelInput()
         {
             _isPointerDown = false;
-            _hoveredObject = null;
+            _hoveredInteractable = null;
             _holdTriggered = false;
         }
 

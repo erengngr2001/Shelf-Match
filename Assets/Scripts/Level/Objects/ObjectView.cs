@@ -1,3 +1,4 @@
+using System;
 using Game;
 using Level.Shelf;
 using PrimeTween;
@@ -15,8 +16,12 @@ namespace Level.Objects
         MovingToStack
     }
     
-    public class ObjectView : MonoBehaviour, IPoolable
+    public class ObjectView : MonoBehaviour, IPoolable, IInteractable
     {
+        // Global events for the LevelManager to listen to
+        public static event Action<ObjectView> OnTapped;
+        public static event Action<ObjectView> OnHeld;
+        
         public SpriteRenderer Renderer;
         public PolygonCollider2D Collider;
         
@@ -29,6 +34,10 @@ namespace Level.Objects
         public int GridX;
         public int LayerIndex;
 
+        public bool CanInteract => IsInteractable;
+        public void InteractTapped() => OnTapped?.Invoke(this);
+        public void InteractHeld() => OnHeld?.Invoke(this);
+        
         private readonly Color32 FRONT_COLOR = new (255, 255, 255, 255);
         private readonly Color32 BACK_COLOR = new (125, 125, 125, 255);
         

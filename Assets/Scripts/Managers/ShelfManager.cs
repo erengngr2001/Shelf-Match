@@ -138,6 +138,12 @@ namespace Managers
                 }
             }
         }
+        
+        public void UpdateAllShelvesVisuals()
+        {
+            foreach (var shelf in ActiveShelves)
+                UpdateShelfVisuals(shelf, false);
+        }
 
         public void ClearShelves()
         {

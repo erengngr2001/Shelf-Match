@@ -9,9 +9,8 @@ namespace UI
         [Header("Events")]
         public UnityEvent OnClick;
 
-        [Header("Animation")]
-        public float PressedScaleMultiplier = 0.90f;
-        public float AnimationDuration = 0.1f;
+        private float PressedScaleMultiplier = 0.90f;
+        private float AnimationDuration = 0.1f;
 
         private bool _scaleModified;
         private Vector3 _cachedScale;

@@ -35,7 +35,6 @@ namespace Managers
         {
             InputManager.ManualUpdate();
             LevelManager.ManualUpdate();
-            // StackManager.ManualUpdate();
         }
 
         private void PlayCurrentLevel()

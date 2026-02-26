@@ -1,13 +1,12 @@
+using System;
 using PrimeTween;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace UI
 {
     public class UIButton : UIInteractable
     {
-        [Header("Events")]
-        public UnityEvent OnClick;
+        public event Action OnClick;
 
         private float PressedScaleMultiplier = 0.90f;
         private float AnimationDuration = 0.1f;

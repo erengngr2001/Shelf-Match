@@ -13,7 +13,6 @@ namespace Managers
         public float ItemVisualWidth;
         
         private List<Sprite> _availableItemSprites = new List<Sprite>();
-        private List<ShelfView> _activeShelves;
 
         private void Awake()
         {
@@ -25,17 +24,11 @@ namespace Managers
             // Frame-by-frame object logic (animations etc.) will go here
         }
         
-        public int GenerateItems(List<ShelfData> shelfDataList, List<ShelfView> activeShelves)
+        public int GenerateItems(List<ShelfView> activeShelves)
         {
-            _activeShelves = activeShelves;
-            ClearItems();
-
             var totalSlots = 0;
             foreach (var shelf in activeShelves)
-            {
-                // shelf.SetupGrid() is already called by ShelfManager during Generation!
                 totalSlots += shelf.Data.Width * shelf.Data.LayerCount;
-            }
 
             var totalItemsToPlace = (totalSlots / 3) * 3;
 
@@ -120,9 +113,9 @@ namespace Managers
             }
         }
 
-        public void ClearItems()
+        public void Clear(List<ShelfView> activeShelves)
         {
-            foreach (var shelf in _activeShelves)
+            foreach (var shelf in activeShelves)
                 shelf.ClearShelf(GamePools.Instance.ObjectViewPool);
         }
 

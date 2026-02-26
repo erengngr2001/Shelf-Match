@@ -714,6 +714,7 @@ MonoBehaviour:
   TopPanel: {fileID: 0}
   StackPanel: {fileID: 0}
   UndoButton: {fileID: 246908731}
+  RestartButton: {fileID: 524003195}
   StackSlotTransforms:
   - {fileID: 1150053409}
   - {fileID: 1458789629}
@@ -1058,7 +1059,7 @@ MonoBehaviour:
   PoolsData: {fileID: 11400000, guid: 3b9b902fd6307a44193b59078b07ce04, type: 2}
   LevelManager: {fileID: 1499957001}
   InputManager: {fileID: 1164590076}
-  CurrentLevel: 3
+  CurrentLevel: 1
 --- !u!1 &1720532533
 GameObject:
   m_ObjectHideFlags: 0

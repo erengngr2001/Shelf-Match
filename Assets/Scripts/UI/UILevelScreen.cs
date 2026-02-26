@@ -10,17 +10,20 @@ namespace UI
         public SpriteRenderer StackPanel; 
         
         public UIButton UndoButton;
+        public UIButton RestartButton;
 
         public Transform[] StackSlotTransforms;
 
         private void OnEnable()
         {
             UndoButton.OnClick += OnUndoClicked;
+            RestartButton.OnClick += OnRestartClicked;
         }
         
         private void OnDisable()
         {
             UndoButton.OnClick -= OnUndoClicked;
+            RestartButton.OnClick -= OnRestartClicked;
         }
 
         private void OnUndoClicked()
@@ -30,8 +33,7 @@ namespace UI
 
         private void OnRestartClicked()
         {
-            // todo: Notify GameManager
-            Debug.Log("Restart Clicked");
+            LevelManager.Instance.RestartLevel();
         }
         
         /// <summary>

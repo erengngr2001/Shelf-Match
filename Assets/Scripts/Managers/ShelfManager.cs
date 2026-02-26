@@ -31,7 +31,6 @@ namespace Managers
         
         public void GenerateShelves(List<ShelfData> shelfDataList)
         {
-            ClearShelves();
             EnvironmentContainer.localScale = Vector3.one;
 
             var totalShelves = shelfDataList.Count;
@@ -146,7 +145,7 @@ namespace Managers
                 UpdateShelfVisuals(shelf, false);
         }
 
-        public void ClearShelves()
+        public void Clear()
         {
             foreach (var shelf in ActiveShelves)
             {

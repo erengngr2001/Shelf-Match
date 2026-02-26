@@ -97,6 +97,29 @@ namespace Managers
                  });
         }
         
+        public void Clear()
+        {
+            foreach (var item in _visualStack)
+            {
+                if (item == null)
+                    continue;
+                
+                item.StopAllMovement();
+                item.OnRelease();
+                GamePools.Instance.ObjectViewPool.Release(item);
+            }
+
+            _logicStack.Clear();
+            _visualStack.Clear();
+            _itemStates.Clear();
+
+            for (var i = 0; i < _matchBuffer.Length; i++) 
+                _matchBuffer[i] = null;
+
+            _isFailing = false;
+            _isVisualProcessing = false;
+        }
+        
         public ObjectView PeekLastItem()
         {
             if (_logicStack.Count == 0) 

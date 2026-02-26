@@ -84,6 +84,8 @@ namespace Managers
         {
             State = LevelState.Initializing;
             _currentLevelNumber = levelNumber;
+            
+            ClearLevel();
 
             var levelFile = Resources.Load<TextAsset>($"Levels/level{levelNumber}");
             if (levelFile == null)
@@ -96,7 +98,7 @@ namespace Managers
             ParseLevelData(levelFile.text, parsedData);
             
             ShelfManager.GenerateShelves(parsedData);
-            _totalItemsRemainingInLevel = ObjectManager.GenerateItems(parsedData, ShelfManager.ActiveShelves);
+            _totalItemsRemainingInLevel = ObjectManager.GenerateItems(ShelfManager.ActiveShelves);
             ShelfManager.UpdateAllShelvesVisuals();
             
             State = LevelState.Playing;
@@ -128,15 +130,6 @@ namespace Managers
         {
             _totalItemsRemainingInLevel -= count;
             CheckWinCondition(_totalItemsRemainingInLevel);
-        }
-
-        public void RestartLevel()
-        {
-            if (State == LevelState.Initializing) 
-                return;
-            
-            Debug.Log($"LevelManager: Restarting Level {_currentLevelNumber}...");
-            StartLevel(_currentLevelNumber);
         }
 
         public void CheckWinCondition(int totalItemsRemainingInLevel)
@@ -182,6 +175,21 @@ namespace Managers
             ShelfManager.ReturnObjectToShelf(itemToUndo, targetSlot);
     
             _totalItemsRemainingInLevel++;
+        }
+        
+        public void RestartLevel()
+        {
+            if (State == LevelState.Initializing) 
+                return;
+            
+            StartLevel(_currentLevelNumber);
+        }
+        
+        public void ClearLevel()
+        {
+            StackManager.Clear();
+            ObjectManager.Clear(ShelfManager.ActiveShelves);
+            ShelfManager.Clear();
         }
     }
 }

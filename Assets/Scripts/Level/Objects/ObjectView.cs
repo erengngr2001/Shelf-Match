@@ -131,5 +131,9 @@ namespace Level.Objects
             
             State = state;
         }
+        
+        public void InteractDown() { }
+        public void InteractUp() { }
+        public void InteractCancel() { }
     }   
 }

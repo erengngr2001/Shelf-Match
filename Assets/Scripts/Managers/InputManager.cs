@@ -46,6 +46,7 @@ namespace Managers
                     _pointerDownTimer = 0f;
                     _pointerDownPosition = screenPosition;
                     _hoveredInteractable = interactable;
+                    _hoveredInteractable.InteractDown();
                 }
             }
         }
@@ -71,7 +72,6 @@ namespace Managers
             {
                 _holdTriggered = true;
                 _hoveredInteractable.InteractHeld();
-                _hoveredInteractable = null; 
             }
         }
 
@@ -80,16 +80,24 @@ namespace Managers
             if (!_isPointerDown) 
                 return;
 
-            // If the finger came up, and we didn't hold long enough, it's a tap
-            if (!_holdTriggered && 
-                _hoveredInteractable != null)
-                _hoveredInteractable.InteractTapped();
+            if (_hoveredInteractable != null)
+            {
+                _hoveredInteractable.InteractUp();
+                
+                if (!_holdTriggered)
+                    _hoveredInteractable.InteractTapped();
+            }
 
-            CancelInput();
+            _isPointerDown = false;
+            _hoveredInteractable = null;
+            _holdTriggered = false;
         }
 
         private void CancelInput()
         {
+            if (_hoveredInteractable != null)
+                _hoveredInteractable.InteractCancel();
+            
             _isPointerDown = false;
             _hoveredInteractable = null;
             _holdTriggered = false;

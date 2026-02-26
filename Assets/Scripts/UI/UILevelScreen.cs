@@ -1,3 +1,5 @@
+using System;
+using Managers;
 using UnityEngine;
 
 namespace UI
@@ -6,13 +8,24 @@ namespace UI
     {
         public SpriteRenderer TopPanel;    
         public SpriteRenderer StackPanel; 
+        
+        public UIButton UndoButton;
 
         public Transform[] StackSlotTransforms;
 
+        private void OnEnable()
+        {
+            UndoButton.OnClick += OnUndoClicked;
+        }
+        
+        private void OnDisable()
+        {
+            UndoButton.OnClick -= OnUndoClicked;
+        }
+
         private void OnUndoClicked()
         {
-            // todo: Notify UndoManager
-            Debug.Log("Undo Clicked");
+            LevelManager.Instance.OnUndoButtonClicked();
         }
 
         private void OnRestartClicked()

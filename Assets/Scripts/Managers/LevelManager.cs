@@ -162,5 +162,26 @@ namespace Managers
             Debug.Log("LevelManager: FAIL STATE! Stack is full.");
             // todo: Trigger Fail UI / Prompt Restart
         }
+        
+        public void OnUndoButtonClicked()
+        {
+            if (State != LevelState.Playing) 
+                return;
+
+            var itemToUndo = StackManager.PeekLastItem();
+            if (itemToUndo == null) 
+                return;
+
+            if (!ShelfManager.TryGetValidUndoSlot(itemToUndo, out var targetSlot)) 
+            {
+                Debug.Log("Undo Ignored: No valid position available.");
+                return; 
+            }
+
+            StackManager.PopLastItemForUndo();
+            ShelfManager.ReturnObjectToShelf(itemToUndo, targetSlot);
+    
+            _totalItemsRemainingInLevel++;
+        }
     }
 }

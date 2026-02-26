@@ -183,7 +183,13 @@ namespace Managers
                 {
                     if (shelf.IsSlotEmpty(x, activeLayer))
                     {
-                        result = new ShelfSlotPointer { Shelf = shelf, X = x, Layer = activeLayer };
+                        result = new ShelfSlotPointer
+                        {
+                            Shelf = shelf, 
+                            X = x, 
+                            Layer = activeLayer
+                        };
+                        
                         return true;
                     }
                 }

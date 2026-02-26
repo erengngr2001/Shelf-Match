@@ -18,7 +18,6 @@ namespace Level.Objects
     
     public class ObjectView : MonoBehaviour, IPoolable, IInteractable
     {
-        // Global events for the LevelManager to listen to
         public static event Action<ObjectView> OnTapped;
         public static event Action<ObjectView> OnHeld;
         
@@ -40,6 +39,8 @@ namespace Level.Objects
         
         private readonly Color32 FRONT_COLOR = new (255, 255, 255, 255);
         private readonly Color32 BACK_COLOR = new (125, 125, 125, 255);
+        
+        private Sequence _activeSequence;
         
         public void Init(ObjectId id, Sprite itemSprite, ShelfView parentShelf, int gridX, int layerIndex)
         {
@@ -65,7 +66,7 @@ namespace Level.Objects
             if (transform.localPosition == targetPos)
                 return;
 
-            Tween.StopAll(transform);
+            StopAllMovement();
             
             if (animate)
                 Tween.LocalPosition(transform, targetPos, duration: 0.35f, ease: Ease.OutQuad);
@@ -75,7 +76,7 @@ namespace Level.Objects
 
         public void OnRelease()
         {
-            Tween.StopAll(transform);
+            StopAllMovement();
             transform.localScale = Vector3.one;
             
             SetState(ObjectState.None);
@@ -130,6 +131,20 @@ namespace Level.Objects
             }
             
             State = state;
+        }
+        
+        public void StopAllMovement()
+        {
+            if (_activeSequence.isAlive) 
+                _activeSequence.Stop();
+    
+            Tween.StopAll(transform);
+        }
+
+        public void AssignSequence(Sequence sequence)
+        {
+            StopAllMovement();
+            _activeSequence = sequence;
         }
         
         public void InteractDown() { }

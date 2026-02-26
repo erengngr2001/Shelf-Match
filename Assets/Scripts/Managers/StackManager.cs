@@ -119,7 +119,7 @@ namespace Managers
             // todo: What happens if I undo after losing? Temporarily reversed the failing state
             _isFailing = false; 
 
-            Tween.StopAll(item.transform);
+            item.StopAllMovement();
 
             return item;
         }
@@ -168,6 +168,7 @@ namespace Managers
                 for (var i = 0; i < 3; i++)
                 {
                     var item = _matchBuffer[i];
+                    item.AssignSequence(matchSeq);
                     _itemStates[item] = StackItemState.Matching;
                     item.Renderer.sortingOrder = 200; 
                     
@@ -211,7 +212,7 @@ namespace Managers
                 
                 if (_itemStates[item] == StackItemState.Flying)
                 {
-                    Tween.StopAll(item.transform);
+                    item.StopAllMovement();
                     item.Renderer.sortingOrder = 100 + i;
                     
                     Tween.Position(item.transform, StackSlots[targetIndex].position, 0.25f, Ease.OutQuad)
@@ -246,6 +247,7 @@ namespace Managers
                 var jumpDuration = 0.18f;
 
                 var stepSeq = Sequence.Create();
+                item.AssignSequence(stepSeq);
                 stepSeq.Group(Tween.PositionX(item.transform, nextPos.x, jumpDuration, Ease.Linear));
 
                 var ySeq = Sequence.Create();

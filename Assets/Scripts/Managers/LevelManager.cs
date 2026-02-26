@@ -163,7 +163,7 @@ namespace Managers
             // todo: Trigger Fail UI / Prompt Restart
         }
         
-        public void OnUndoButtonClicked()
+        public void UndoLastMove()
         {
             if (State != LevelState.Playing) 
                 return;

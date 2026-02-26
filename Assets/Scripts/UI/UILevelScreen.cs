@@ -25,7 +25,7 @@ namespace UI
 
         private void OnUndoClicked()
         {
-            LevelManager.Instance.OnUndoButtonClicked();
+            LevelManager.Instance.UndoLastMove();
         }
 
         private void OnRestartClicked()

@@ -96,6 +96,33 @@ namespace Managers
                      stack.ProcessVisualStack();
                  });
         }
+        
+        public ObjectView PeekLastItem()
+        {
+            if (_logicStack.Count == 0) 
+                return null;
+            
+            return _logicStack[_logicStack.Count - 1];
+        }
+
+        public ObjectView PopLastItemForUndo()
+        {
+            if (_logicStack.Count == 0) 
+                return null;
+
+            var item = _logicStack[_logicStack.Count - 1];
+            _logicStack.RemoveAt(_logicStack.Count - 1);
+    
+            _visualStack.Remove(item);
+            _itemStates.Remove(item);
+    
+            // todo: What happens if I undo after losing? Temporarily reversed the failing state
+            _isFailing = false; 
+
+            Tween.StopAll(item.transform);
+
+            return item;
+        }
 
         private void ProcessVisualStack()
         {

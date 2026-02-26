@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Game;
 using Level.Objects;
 using Level.Shelf;
+using PrimeTween;
 using UnityEngine;
 
 namespace Managers
@@ -154,5 +155,92 @@ namespace Managers
             }
             ActiveShelves.Clear();
         }
+        
+        #region UNDO
+        
+        public bool TryGetValidUndoSlot(ObjectView item, out ShelfSlotPointer result)
+        {
+            result = default;
+
+            // Original Position is available
+            if (item.ParentShelf.IsSlotEmpty(item.GridX, item.LayerIndex))
+            {
+                result = new ShelfSlotPointer
+                {
+                    Shelf = item.ParentShelf, 
+                    X = item.GridX, 
+                    Layer = item.LayerIndex
+                };
+                
+                return true;
+            }
+
+            // First available empty slot on any active layer
+            foreach (var shelf in ActiveShelves)
+            {
+                var activeLayer = GetFrontmostActiveLayer(shelf);
+                for (var x = 0; x < shelf.Data.Width; x++)
+                {
+                    if (shelf.IsSlotEmpty(x, activeLayer))
+                    {
+                        result = new ShelfSlotPointer { Shelf = shelf, X = x, Layer = activeLayer };
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        // todo: ensure this works correctly, try edge cases
+        private int GetFrontmostActiveLayer(ShelfView shelf)
+        {
+            for (var layer = 0; layer < shelf.Data.LayerCount; layer++)
+            {
+                for (var x = 0; x < shelf.Data.Width; x++)
+                {
+                    if (!shelf.IsSlotEmpty(x, layer))
+                        return layer;
+                }
+            }
+            return 0; 
+        }
+
+        public void ReturnObjectToShelf(ObjectView item, ShelfSlotPointer slot)
+        {
+            var shelf = slot.Shelf;
+            var x = slot.X;
+            var layer = slot.Layer;
+            
+            shelf.AddObject(item, x, layer);
+
+            item.Init(item.Id, item.Renderer.sprite, shelf, x, layer);
+            item.transform.SetParent(shelf.ItemContainer.transform, true);
+
+            var targetLocalPos = GetLocalPositionForSlot(shelf, x, layer); 
+
+            Tween.LocalPosition(item.transform, targetLocalPos, duration: 0.3f, ease: Ease.OutQuad)
+                .OnComplete(this, (manager) => {
+                    manager.UpdateAllShelvesVisuals(); 
+                });
+        }
+        
+        #endregion
+        
+        private Vector3 GetLocalPositionForSlot(ShelfView shelf, int x, int layer)
+        {
+            var currentActiveLayer = GetFrontmostActiveLayer(shelf);
+            var startX = -(shelf.Data.Width - 1) * ItemVisualWidth / 2f;
+    
+            var relativeDepth = layer - currentActiveLayer;
+    
+            var visualDepth = Mathf.Clamp(relativeDepth, 0, 2);
+    
+            var posX = startX + (x * ItemVisualWidth);
+            var posY = ItemOffsetY + (visualDepth * LayerOffset.y);
+    
+            return new Vector3(posX, posY, 0f);
+        }
+        
     } 
 }

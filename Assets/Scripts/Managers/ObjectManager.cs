@@ -9,13 +9,6 @@ namespace Managers
 {
     public class ObjectManager : MonoBehaviour, IManualUpdate
     {
-        private struct ShelfSlotPointer
-        {
-            public ShelfView Shelf;
-            public int X;
-            public int Layer;
-        }
-
         [Header("Placement Settings")]
         public float ItemVisualWidth;
         

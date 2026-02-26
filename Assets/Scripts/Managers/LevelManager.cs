@@ -173,8 +173,6 @@ namespace Managers
 
             StackManager.PopLastItemForUndo();
             ShelfManager.ReturnObjectToShelf(itemToUndo, targetSlot);
-    
-            _totalItemsRemainingInLevel++;
         }
         
         public void RestartLevel()

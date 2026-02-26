@@ -83,7 +83,7 @@ namespace Game
             
                 _pool.RemoveAt(index);
             
-                obj.transform.SetParent(null);
+                obj.transform.SetParent(null, false);
                 obj.gameObject.SetActive(true);
             
                 return obj;
@@ -111,7 +111,7 @@ namespace Game
                 poolable.OnRelease();
             
             obj.gameObject.SetActive(false);
-            obj.transform.SetParent(_parent);
+            obj.transform.SetParent(_parent, false);
             _pool.Add(obj);
         }
 

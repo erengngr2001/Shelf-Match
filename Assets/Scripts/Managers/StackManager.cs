@@ -208,11 +208,15 @@ namespace Managers
                     item.AssignSequence(matchSeq);
                     _itemStates[item] = StackItemState.Matching;
                     item.Renderer.sortingOrder = 200; 
-                    
-                    matchSeq.Group(Tween.LocalPositionY(item.transform, item.transform.localPosition.y + 1.5f, 0.3f, Ease.OutBack))
-                            .Group(Tween.Scale(item.transform, Vector3.one * 1.3f, 0.3f, Ease.OutBack));
+    
+                    var targetWorldY = item.transform.position.y + 1.5f;
+                    var targetScale = item.transform.localScale * 1.3f;
+
+                    matchSeq.Group(Tween.PositionY(item.transform, targetWorldY, 0.3f, Ease.OutBack))
+                            .Group(Tween.Scale(item.transform, targetScale, 0.3f, Ease.OutBack));
                 }
 
+                // todo: allocates
                 matchSeq.OnComplete(_matchBuffer, (buffer) => 
                 {
                     for (var i = 0; i < 3; i++)

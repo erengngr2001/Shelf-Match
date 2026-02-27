@@ -45,6 +45,11 @@ namespace Managers
         public void LevelCompleted()
         {
             CurrentLevel++;
+            
+            // Manually cap max level to 3 for this prototype
+            if (CurrentLevel > 3)
+                CurrentLevel = 3;
+            
             Debug.Log($"GameManager: Saving user progress. Advancing to Level {CurrentLevel}");
             
             // For this prototype, immediately loop into the next level

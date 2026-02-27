@@ -147,6 +147,22 @@ namespace Level.Objects
             _activeSequence = sequence;
         }
         
+        public void SetStateByRelativeDepth(int relativeDepth)
+        {
+            switch (relativeDepth)
+            {
+                case 0:
+                    SetState(ObjectState.Front);
+                    break;
+                case 1:
+                    SetState(ObjectState.Back);
+                    break;
+                default:
+                    SetState(ObjectState.Hidden);
+                    break;
+            }
+        }
+        
         public void InteractDown() { }
         public void InteractUp() { }
         public void InteractCancel() { }

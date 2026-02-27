@@ -71,12 +71,6 @@ namespace Managers
             UpdateShelfVisuals(shelf, true);
         }
 
-        public void UndoObjectPlacementOnShelf(ShelfView shelf, ObjectView obj)
-        {
-            shelf.Grid[obj.GridX, obj.LayerIndex] = obj;
-            UpdateShelfVisuals(shelf, true);
-        }
-
         public void UpdateShelfVisuals(ShelfView shelf, bool animate)
         {
             var currentActiveLayer = -1;
@@ -112,23 +106,16 @@ namespace Managers
                 for (var layer = 0; layer < shelf.ColumnMaxDepths[x]; layer++)
                 {
                     var obj = shelf.Grid[x, layer];
+                    
                     if (obj == null) 
+                        continue;
+                    
+                    if (obj.State == ObjectState.Collected)
                         continue;
                     
                     var relativeDepth = layer - currentActiveLayer;
 
-                    switch (relativeDepth)
-                    {
-                        case 0:
-                            obj.SetState(ObjectState.Front);
-                            break;
-                        case 1:
-                            obj.SetState(ObjectState.Back);
-                            break;
-                        default:
-                            obj.SetState(ObjectState.Hidden);
-                            break;
-                    }
+                    obj.SetStateByRelativeDepth(relativeDepth);
 
                     var visualDepth = Mathf.Min(relativeDepth, 2);
                     var posX = startX + (x * ItemVisualWidth);
@@ -220,6 +207,7 @@ namespace Managers
             shelf.AddObject(item, x, layer);
 
             item.Init(item.Id, item.Renderer.sprite, shelf, x, layer);
+            item.SetState(ObjectState.Collected);
             item.transform.SetParent(shelf.ItemContainer.transform, true);
 
             var targetLocalPos = GetLocalPositionForSlot(shelf, x, layer); 
@@ -230,7 +218,10 @@ namespace Managers
             undoSeq.Group(Tween.LocalPosition(item.transform, targetLocalPos, 0.3f, Ease.OutQuad))
                 .Group(Tween.Scale(item.transform, Vector3.one, 0.3f, Ease.OutQuad));
 
+            UpdateShelfVisuals(shelf, true);
+            
             undoSeq.OnComplete(this, (manager) => {
+                item.SetState(ObjectState.None);
                 manager.UpdateAllShelvesVisuals(); 
             });
         }
@@ -251,6 +242,5 @@ namespace Managers
     
             return new Vector3(posX, posY, 0f);
         }
-        
     } 
 }

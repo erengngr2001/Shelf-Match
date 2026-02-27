@@ -11,6 +11,7 @@ namespace Managers
     {
         [Header("References")]
         public Transform EnvironmentContainer;
+        public float CurrentEnvironmentScale { get; private set; } = 1f;
 
         [Header("Layout Settings")]
         public float ShelfSpacingY;
@@ -23,10 +24,16 @@ namespace Managers
         public Vector3 LayerOffset;
 
         public List<ShelfView> ActiveShelves { get; private set; } = new List<ShelfView>();
+        
+        private bool _isVisualsDirty;
 
         public void ManualUpdate()
         {
-            // Frame-by-frame shelf logic (animations etc.) will go here
+            if (!_isVisualsDirty)
+                return;
+            
+            _isVisualsDirty = false;
+            UpdateAllShelvesVisuals();
         }
         
         public void GenerateShelves(List<ShelfData> shelfDataList)
@@ -61,6 +68,7 @@ namespace Managers
             var finalScale = Mathf.Min(scaleX, scaleY, 1f);
 
             EnvironmentContainer.localScale = new Vector3(finalScale, finalScale, 1f);
+            CurrentEnvironmentScale = finalScale;
         }
 
         public void ExtractObjectFromShelf(ShelfView shelf, ObjectView obj)
@@ -117,11 +125,9 @@ namespace Managers
 
                     obj.SetStateByRelativeDepth(relativeDepth);
 
-                    var visualDepth = Mathf.Min(relativeDepth, 2);
-                    var posX = startX + (x * ItemVisualWidth);
-                    var posY = ItemOffsetY + (visualDepth * LayerOffset.y);
-                    
-                    obj.MoveToLocalPosition(new Vector3(posX, posY, 0f), animate);
+                    var targetWorldPos = GetWorldPositionForSlot(shelf, x, layer);
+                    var targetScale = obj.DefaultScale * CurrentEnvironmentScale;
+                    obj.MoveToWorldPosition(targetWorldPos, targetScale, animate);
                 }
             }
         }
@@ -198,32 +204,62 @@ namespace Managers
             return 0; 
         }
 
+        // public void ReturnObjectToShelf(ObjectView item, ShelfSlotPointer slot)
+        // {
+        //     var shelf = slot.Shelf;
+        //     var x = slot.X;
+        //     var layer = slot.Layer;
+        //     
+        //     shelf.AddObject(item, x, layer);
+        //
+        //     item.Init(item.Id, item.Renderer.sprite, shelf, x, layer);
+        //     item.SetState(ObjectState.Collected);
+        //     item.transform.SetParent(shelf.ItemContainer.transform, true);
+        //
+        //     var targetLocalPos = GetLocalPositionForSlot(shelf, x, layer); 
+        //
+        //     var undoSeq = Sequence.Create();
+        //     item.AssignSequence(undoSeq);
+        //     
+        //     undoSeq.Group(Tween.LocalPosition(item.transform, targetLocalPos, 0.3f, Ease.OutQuad))
+        //         .Group(Tween.Scale(item.transform, Vector3.one, 0.3f, Ease.OutQuad));
+        //
+        //     UpdateShelfVisuals(shelf, true);
+        //     
+        //     // todo: allocates
+        //     undoSeq.OnComplete(this, (manager) => {
+        //         item.SetState(ObjectState.None);
+        //         manager.UpdateAllShelvesVisuals(); 
+        //     });
+        // }
+        
         public void ReturnObjectToShelf(ObjectView item, ShelfSlotPointer slot)
         {
             var shelf = slot.Shelf;
             var x = slot.X;
             var layer = slot.Layer;
-            
+    
             shelf.AddObject(item, x, layer);
 
             item.Init(item.Id, item.Renderer.sprite, shelf, x, layer);
             item.SetState(ObjectState.Collected);
-            item.transform.SetParent(shelf.ItemContainer.transform, true);
-
-            var targetLocalPos = GetLocalPositionForSlot(shelf, x, layer); 
+    
+            var targetWorldPos = GetWorldPositionForSlot(shelf, x, layer); 
+    
+            var targetScale = item.DefaultScale * CurrentEnvironmentScale;
 
             var undoSeq = Sequence.Create();
             item.AssignSequence(undoSeq);
-            
-            undoSeq.Group(Tween.LocalPosition(item.transform, targetLocalPos, 0.3f, Ease.OutQuad))
-                .Group(Tween.Scale(item.transform, Vector3.one, 0.3f, Ease.OutQuad));
+    
+            undoSeq.Group(Tween.Position(item.transform, targetWorldPos, 0.3f, Ease.OutQuad))
+                .Group(Tween.Scale(item.transform, targetScale, 0.3f, Ease.OutQuad));
 
             UpdateShelfVisuals(shelf, true);
-            
+    
             // todo: allocates
             undoSeq.OnComplete(this, (manager) => {
                 item.SetState(ObjectState.None);
-                manager.UpdateAllShelvesVisuals(); 
+                manager._isVisualsDirty = true; 
             });
         }
         
@@ -242,6 +278,19 @@ namespace Managers
             var posY = ItemOffsetY + (visualDepth * LayerOffset.y);
     
             return new Vector3(posX, posY, 0f);
+        }
+        
+        private Vector3 GetWorldPositionForSlot(ShelfView shelf, int x, int layer)
+        {
+            var currentActiveLayer = GetFrontmostActiveLayer(shelf);
+            var startX = -(shelf.Data.Width - 1) * ItemVisualWidth / 2f;
+            var relativeDepth = layer - currentActiveLayer;
+            var visualDepth = Mathf.Clamp(relativeDepth, 0, 2);
+
+            var localPosX = startX + (x * ItemVisualWidth);
+            var localPosY = ItemOffsetY + (visualDepth * LayerOffset.y);
+
+            return shelf.transform.TransformPoint(new Vector3(localPosX, localPosY, 0f));
         }
     } 
 }

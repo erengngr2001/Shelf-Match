@@ -91,13 +91,11 @@ namespace Managers
             
             obj.Renderer.sortingOrder = 100 + _visualStack.Count - 1; 
             
-            obj.transform.SetParent(Stack, true);
-            
             var moveSeq = Sequence.Create();
             obj.AssignSequence(moveSeq);
             
             moveSeq.Group(Tween.Position(obj.transform, targetSlot.position, 0.25f, Ease.OutQuad))
-                    .Group(Tween.Scale(obj.transform, Vector3.one, 0.25f, Ease.OutQuad));
+                   .Group(Tween.Scale(obj.transform, obj.DefaultScale, 0.25f, Ease.OutQuad));
             
             // todo: allocates
             moveSeq.OnComplete(this, (stack) => {

@@ -24,6 +24,8 @@ namespace Level.Objects
         public SpriteRenderer Renderer;
         public PolygonCollider2D Collider;
         
+        public Vector3 DefaultScale { get; private set; }
+        
         public ObjectState State { get; private set; }
 
         public ObjectId Id;
@@ -41,7 +43,12 @@ namespace Level.Objects
         private readonly Color32 BACK_COLOR = new (125, 125, 125, 255);
         
         private Sequence _activeSequence;
-        
+
+        private void Awake()
+        {
+            DefaultScale = transform.localScale;
+        }
+
         public void Init(ObjectId id, Sprite itemSprite, ShelfView parentShelf, int gridX, int layerIndex)
         {
             SetState(ObjectState.None);
@@ -73,11 +80,38 @@ namespace Level.Objects
             else
                 transform.localPosition = targetPos;
         }
+        
+        public void MoveToWorldPosition(Vector3 targetWorldPos, Vector3 targetScale, bool animate)
+        {
+            // Skip if we are already exactly where we need to be
+            if (Vector3.Distance(transform.position, targetWorldPos) < 0.001f &&
+                Vector3.Distance(transform.localScale, targetScale) < 0.001f)
+                return;
+
+            StopAllMovement();
+    
+            if (animate)
+            {
+                var seq = Sequence.Create();
+                
+                AssignSequence(seq);
+                
+                seq.Group(Tween.Position(transform, targetWorldPos, duration: 0.35f, ease: Ease.OutQuad))
+                    .Group(Tween.Scale(transform, targetScale, duration: 0.35f, ease: Ease.OutQuad));
+            }
+            else
+            {
+                // Instant snap
+                StopAllMovement();
+                transform.position = targetWorldPos;
+                transform.localScale = targetScale;
+            }
+        }
 
         public void OnRelease()
         {
             StopAllMovement();
-            transform.localScale = Vector3.one;
+            transform.localScale = DefaultScale;
             
             SetState(ObjectState.None);
         }

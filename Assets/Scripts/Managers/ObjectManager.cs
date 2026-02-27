@@ -9,6 +9,8 @@ namespace Managers
 {
     public class ObjectManager : MonoBehaviour, IManualUpdate
     {
+        public Transform ActiveObjectsContainer;
+        
         [Header("Placement Settings")]
         public float ItemVisualWidth;
         
@@ -34,6 +36,7 @@ namespace Managers
 
             CalculateColumnDepths(activeShelves, totalItemsToPlace);
 
+            var envScale = LevelManager.Instance.ShelfManager.CurrentEnvironmentScale;
             for (var triplet = 0; triplet < totalItemsToPlace / 3; triplet++)
             {
                 var randomSprite = _availableItemSprites[Random.Range(0, _availableItemSprites.Count)];
@@ -44,14 +47,16 @@ namespace Managers
                     using var _ = ListPool<ShelfSlotPointer>.Get(out var openSlots);
                     GetAvailableBackmostSlots(activeShelves, openSlots);
                     
-                    if (openSlots.Count == 0) break;
+                    if (openSlots.Count == 0) 
+                        break;
 
                     var slot = openSlots[Random.Range(0, openSlots.Count)];
                     var obj = GamePools.Instance.ObjectViewPool.Get();
                     
-                    obj.transform.SetParent(slot.Shelf.ItemContainer.transform, false);
+                    obj.transform.SetParent(ActiveObjectsContainer, false);
                     obj.Init(id, randomSprite, slot.Shelf, slot.X, slot.Layer);
-
+                    obj.transform.localScale = obj.DefaultScale * envScale;
+                    
                     slot.Shelf.AddObject(obj, slot.X, slot.Layer);
                 }
             }

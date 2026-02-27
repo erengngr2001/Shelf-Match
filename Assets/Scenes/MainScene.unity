@@ -998,6 +998,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b65fd1231257c174686de8690c051a16, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ActiveObjectsContainer: {fileID: 312756546}
   ItemVisualWidth: 9
 --- !u!1 &1458789628
 GameObject:

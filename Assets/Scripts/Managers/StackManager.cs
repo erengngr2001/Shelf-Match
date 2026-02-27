@@ -17,6 +17,7 @@ namespace Managers
         }
 
         public Transform[] StackSlots;
+        public Transform Stack;
 
         private List<ObjectView> _logicStack = new List<ObjectView>(5);
         private List<ObjectView> _visualStack = new List<ObjectView>(10);
@@ -90,19 +91,13 @@ namespace Managers
             
             obj.Renderer.sortingOrder = 100 + _visualStack.Count - 1; 
             
-            // Return object to its original scale so that all objects across all levels look the same on the stack
-            var parentScale = obj.transform.parent.lossyScale;
-            var compensatoryScale = new Vector3(
-                1f / parentScale.x, 
-                1f / parentScale.y, 
-                1f / parentScale.z
-            );
+            obj.transform.SetParent(Stack, true);
             
             var moveSeq = Sequence.Create();
             obj.AssignSequence(moveSeq);
             
             moveSeq.Group(Tween.Position(obj.transform, targetSlot.position, 0.25f, Ease.OutQuad))
-                .Group(Tween.Scale(obj.transform, compensatoryScale, 0.25f, Ease.OutQuad));
+                    .Group(Tween.Scale(obj.transform, Vector3.one, 0.25f, Ease.OutQuad));
             
             // todo: allocates
             moveSeq.OnComplete(this, (stack) => {
@@ -257,6 +252,7 @@ namespace Managers
                     item.Renderer.sortingOrder = 100 + i;
                     
                     Tween.Position(item.transform, StackSlots[targetIndex].position, 0.25f, Ease.OutQuad)
+                        // todo: allocates
                          .OnComplete(this, (stack) => {
                              stack._itemStates[item] = StackItemState.Resting;
                              stack.ProcessVisualStack();

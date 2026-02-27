@@ -16,6 +16,8 @@ namespace Managers
         private Vector2 _pointerDownPosition;
         private bool _holdTriggered;
         private IInteractable _hoveredInteractable;
+        
+        private readonly float _touchRadius = 0.2f;
 
         public void ManualUpdate()
         {
@@ -34,8 +36,7 @@ namespace Managers
 
             var worldPosition = MainCamera.ScreenToWorldPoint(screenPosition);
             
-            var hitCollider = Physics2D.OverlapPoint(worldPosition, InteractableLayerMask);
-
+            var hitCollider = Physics2D.OverlapCircle(worldPosition, _touchRadius, InteractableLayerMask);
             if (hitCollider != null && 
                 hitCollider.TryGetComponent<IInteractable>(out var interactable))
             {

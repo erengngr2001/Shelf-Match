@@ -220,6 +220,7 @@ namespace Managers
 
             UpdateShelfVisuals(shelf, true);
             
+            // todo: allocates
             undoSeq.OnComplete(this, (manager) => {
                 item.SetState(ObjectState.None);
                 manager.UpdateAllShelvesVisuals(); 

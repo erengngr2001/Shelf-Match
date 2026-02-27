@@ -224,10 +224,15 @@ namespace Managers
 
             var targetLocalPos = GetLocalPositionForSlot(shelf, x, layer); 
 
-            Tween.LocalPosition(item.transform, targetLocalPos, duration: 0.3f, ease: Ease.OutQuad)
-                .OnComplete(this, (manager) => {
-                    manager.UpdateAllShelvesVisuals(); 
-                });
+            var undoSeq = Sequence.Create();
+            item.AssignSequence(undoSeq);
+            
+            undoSeq.Group(Tween.LocalPosition(item.transform, targetLocalPos, 0.3f, Ease.OutQuad))
+                .Group(Tween.Scale(item.transform, Vector3.one, 0.3f, Ease.OutQuad));
+
+            undoSeq.OnComplete(this, (manager) => {
+                manager.UpdateAllShelvesVisuals(); 
+            });
         }
         
         #endregion

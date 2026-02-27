@@ -90,11 +90,25 @@ namespace Managers
             
             obj.Renderer.sortingOrder = 100 + _visualStack.Count - 1; 
             
-            Tween.Position(obj.transform, targetSlot.position, duration: 0.25f, ease: Ease.OutQuad)
-                 .OnComplete(this, (stack) => {
-                     stack._itemStates[obj] = StackItemState.Resting;
-                     stack.ProcessVisualStack();
-                 });
+            // Return object to its original scale so that all objects across all levels look the same on the stack
+            var parentScale = obj.transform.parent.lossyScale;
+            var compensatoryScale = new Vector3(
+                1f / parentScale.x, 
+                1f / parentScale.y, 
+                1f / parentScale.z
+            );
+            
+            var moveSeq = Sequence.Create();
+            obj.AssignSequence(moveSeq);
+            
+            moveSeq.Group(Tween.Position(obj.transform, targetSlot.position, 0.25f, Ease.OutQuad))
+                .Group(Tween.Scale(obj.transform, compensatoryScale, 0.25f, Ease.OutQuad));
+            
+            // todo: allocates
+            moveSeq.OnComplete(this, (stack) => {
+                stack._itemStates[obj] = StackItemState.Resting;
+                stack.ProcessVisualStack();
+            });
         }
         
         public void Clear()

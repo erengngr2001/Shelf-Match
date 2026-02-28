@@ -163,7 +163,7 @@ GameObject:
   m_Component:
   - component: {fileID: 113138836}
   - component: {fileID: 113138837}
-  m_Layer: 6
+  m_Layer: 5
   m_Name: Bg
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -315,7 +315,7 @@ GameObject:
   - component: {fileID: 246908730}
   - component: {fileID: 246908732}
   - component: {fileID: 246908731}
-  m_Layer: 6
+  m_Layer: 5
   m_Name: Undo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -609,7 +609,7 @@ Camera:
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 119
+    m_Bits: 87
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -647,7 +647,7 @@ GameObject:
   - component: {fileID: 524003194}
   - component: {fileID: 524003196}
   - component: {fileID: 524003195}
-  m_Layer: 6
+  m_Layer: 5
   m_Name: Restart
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -784,7 +784,7 @@ Camera:
   m_Depth: 1
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 128
+    m_Bits: 160
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -980,12 +980,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ecd0852b93885e144bea4cf2bf4029ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  InteractableLayerMask:
-    serializedVersion: 2
-    m_Bits: 64
+  InputGroups:
+  - ReferenceCamera: {fileID: 870276103}
+    InteractableMask:
+      serializedVersion: 2
+      m_Bits: 160
+  - ReferenceCamera: {fileID: 519420031}
+    InteractableMask:
+      serializedVersion: 2
+      m_Bits: 64
   HoldDurationThreshold: 0.3
   DragCancelThreshold: 15
-  MainCamera: {fileID: 519420031}
 --- !u!1 &1181889098
 GameObject:
   m_ObjectHideFlags: 0
@@ -1075,7 +1080,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ActiveObjectsContainer: {fileID: 0}
-  ItemVisualWidth: 9
 --- !u!1 &1458789628
 GameObject:
   m_ObjectHideFlags: 0
@@ -1215,7 +1219,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1720532534}
   - component: {fileID: 1720532535}
-  m_Layer: 6
+  m_Layer: 5
   m_Name: Bg
   m_TagString: Untagged
   m_Icon: {fileID: 0}

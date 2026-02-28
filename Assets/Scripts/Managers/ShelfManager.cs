@@ -67,9 +67,8 @@ namespace Managers
             var finalScale = Mathf.Min(scaleX, scaleY, 1f);
 
             var gameManager = GameManager.Instance;
-            var levelManager = LevelManager.Instance;
-            
-            gameManager.EnvironmentCamera.orthographicSize = levelManager.BaselineCameraSize / finalScale;
+
+            gameManager.EnvironmentCamera.orthographicSize = CameraUtilities.BaselineCameraSize / finalScale;
         }
 
         public void ExtractObjectFromShelf(ShelfView shelf, ObjectView obj)
@@ -125,9 +124,8 @@ namespace Managers
                     obj.SetStateByRelativeDepth(relativeDepth);
 
                     var targetWorldPos = GetWorldPositionForSlot(shelf, x, layer);
-                    var targetScale = obj.DefaultScale;
                     
-                    obj.MoveToWorldPosition(targetWorldPos, targetScale, animate);
+                    obj.MoveToWorldPosition(targetWorldPos, animate);
                 }
             }
         }
@@ -217,28 +215,22 @@ namespace Managers
     
             var targetWorldPos = GetWorldPositionForSlot(shelf, x, layer); 
 
-            item.transform.position = GameManager.Instance.SwitchCameraSpace(
+            item.transform.position = CameraUtilities.SwitchCameraSpace(
                 item.transform.position, 
                 GameManager.Instance.StackCamera, 
                 GameManager.Instance.EnvironmentCamera
             );
             item.gameObject.layer = LayerMask.NameToLayer("Interactable");
-    
-            var targetScale = item.DefaultScale;
 
-            var undoSeq = Sequence.Create();
-            item.AssignSequence(undoSeq);
-    
-            undoSeq.Group(Tween.Position(item.transform, targetWorldPos, 0.3f, Ease.OutQuad))
-                .Group(Tween.Scale(item.transform, targetScale, 0.3f, Ease.OutQuad));
-
-            UpdateShelfVisuals(shelf, true);
-    
-            // todo: allocates
-            undoSeq.OnComplete(this, (manager) => {
+            Tween.Position(item.transform, targetWorldPos, 0.3f, Ease.OutQuad)
+                // todo: allocates
+                .OnComplete(this, (manager) => {
                 item.SetState(ObjectState.None);
                 manager._isVisualsDirty = true; 
             });
+
+            UpdateShelfVisuals(shelf, true);
+    
         }
         
         #endregion

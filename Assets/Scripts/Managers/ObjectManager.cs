@@ -11,9 +11,6 @@ namespace Managers
     {
         public Transform ActiveObjectsContainer;
         
-        [Header("Placement Settings")]
-        public float ItemVisualWidth;
-        
         private List<Sprite> _availableItemSprites = new List<Sprite>();
 
         private void Awake()

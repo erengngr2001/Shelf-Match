@@ -862,7 +862,7 @@ MonoBehaviour:
   StackPanel: {fileID: 0}
   UndoButton: {fileID: 246908731}
   RestartButton: {fileID: 524003195}
-  StackSlotTransforms:
+  StackSlots:
   - {fileID: 1150053409}
   - {fileID: 1458789629}
   - {fileID: 2022402944}
@@ -1030,13 +1030,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 312e2b838a77ec343bccbbc5e4515c62, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  StackSlots:
-  - {fileID: 1150053409}
-  - {fileID: 1458789629}
-  - {fileID: 2022402944}
-  - {fileID: 96995276}
-  - {fileID: 227798982}
-  Stack: {fileID: 312756546}
 --- !u!1 &1314514851
 GameObject:
   m_ObjectHideFlags: 0
@@ -1161,7 +1154,7 @@ MonoBehaviour:
   ShelfManager: {fileID: 1871292672}
   ObjectManager: {fileID: 1314514853}
   StackManager: {fileID: 1181889100}
-  BaselineCameraSize: 50
+  LevelScreen: {fileID: 1013929850}
 --- !u!1 &1685966550
 GameObject:
   m_ObjectHideFlags: 0

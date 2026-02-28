@@ -60,14 +60,5 @@ namespace Managers
             // todo: maybe need a small win ui here before proceeding
             PlayCurrentLevel();
         }
-
-        public Vector3 SwitchCameraSpace(Vector3 worldPos, Camera fromCam, Camera toCam)
-        {
-            Vector3 screenPos = fromCam.WorldToScreenPoint(worldPos);
-            screenPos.z = Mathf.Abs(toCam.transform.position.z);
-            Vector3 newWorldPos = toCam.ScreenToWorldPoint(screenPos);
-            newWorldPos.z = 0f; 
-            return newWorldPos;
-        }
     }
 }

@@ -12,6 +12,10 @@ namespace Managers
         public LevelManager LevelManager;
         public InputManager InputManager;
 
+        [Header("Cameras")]
+        public Camera EnvironmentCamera;
+        public Camera StackCamera;
+
         [Header("User Data")]
         public int CurrentLevel = 1;
 

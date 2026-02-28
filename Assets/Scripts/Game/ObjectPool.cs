@@ -27,7 +27,8 @@ namespace Game
     public class ObjectPool<T> : IDisposable where T : Component
     {
         private List<T> _pool;
-        private Transform _parent;
+        private Transform _inactiveContainer;
+        private Transform _activeContainer; 
 
         public T Prefab;
         public int AutoFillCount;
@@ -39,7 +40,7 @@ namespace Game
 
         public void Init()
         {
-            Assert.IsNull(_parent, "Pool is already initialized");
+            Assert.IsNull(_inactiveContainer, "Pool is already initialized");
             
             if (_pool == null)
             {
@@ -48,13 +49,18 @@ namespace Game
             } 
             else
             {
-                // Fixes domain reload issues
                 _pool.Clear();
             }
 
-            // Create a clean container for the pooled objects in the current scene
-            var go = new GameObject($"{Prefab.name}_Pool");
-            _parent = go.transform;
+            // Create clean containers. We explicitly set scales to Vector3.one to guarantee safety.
+            var inactiveGo = new GameObject($"{Prefab.name}_InactivePool");
+            _inactiveContainer = inactiveGo.transform;
+            _inactiveContainer.localScale = Vector3.one;
+            inactiveGo.SetActive(false); 
+
+            var activeGo = new GameObject($"{Prefab.name}_ActiveItems");
+            _activeContainer = activeGo.transform;
+            _activeContainer.localScale = Vector3.one;
 
             if (AutoFillCount > 0)
             {
@@ -64,12 +70,14 @@ namespace Game
 
         public void Dispose()
         {
-            if (_parent != null)
-            {
-                Object.Destroy(_parent.gameObject);
-            }
+            if (_inactiveContainer != null) 
+                Object.Destroy(_inactiveContainer.gameObject);
+            
+            if (_activeContainer != null) 
+                Object.Destroy(_activeContainer.gameObject);
 
-            _parent = null;
+            _inactiveContainer = null;
+            _activeContainer = null;
             _pool?.Clear();
             _pool = null;
         } 
@@ -83,13 +91,14 @@ namespace Game
             
                 _pool.RemoveAt(index);
             
-                obj.transform.SetParent(null, false);
+                // Parent to the safe, unscaled active container
+                obj.transform.SetParent(_activeContainer, false);
                 obj.gameObject.SetActive(true);
             
                 return obj;
             }
         
-            var objNew = Object.Instantiate(Prefab);
+            var objNew = Object.Instantiate(Prefab, _activeContainer);
             objNew.name = Prefab.name;
             return objNew;
         }
@@ -111,7 +120,7 @@ namespace Game
                 poolable.OnRelease();
             
             obj.gameObject.SetActive(false);
-            obj.transform.SetParent(_parent, false);
+            obj.transform.SetParent(_inactiveContainer, false);
             _pool.Add(obj);
         }
 
@@ -119,7 +128,7 @@ namespace Game
         {
             for (int i = 0; i < count; i++)
             {
-                var obj = Object.Instantiate(Prefab, _parent);
+                var obj = Object.Instantiate(Prefab, _inactiveContainer);
                 obj.name = Prefab.name;
             
                 Release(obj);

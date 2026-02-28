@@ -24,7 +24,7 @@ namespace Level.Objects
         public SpriteRenderer Renderer;
         public PolygonCollider2D Collider;
         
-        public Vector3 DefaultScale { get; private set; }
+        public Vector3 DefaultScale { get; private set; } = Vector3.one;
         
         public ObjectState State { get; private set; }
 
@@ -44,11 +44,6 @@ namespace Level.Objects
         
         private Sequence _activeSequence;
 
-        private void Awake()
-        {
-            DefaultScale = transform.localScale;
-        }
-
         public void Init(ObjectId id, Sprite itemSprite, ShelfView parentShelf, int gridX, int layerIndex)
         {
             SetState(ObjectState.None);
@@ -66,46 +61,20 @@ namespace Level.Objects
 
             Renderer.sortingOrder = -layerIndex;
         }
-        
-        public void MoveToLocalPosition(Vector3 targetPos, bool animate)
-        {
-            // todo: should not be needing this
-            if (transform.localPosition == targetPos)
-                return;
 
-            StopAllMovement();
-            
-            if (animate)
-                Tween.LocalPosition(transform, targetPos, duration: 0.35f, ease: Ease.OutQuad);
-            else
-                transform.localPosition = targetPos;
-        }
-        
-        public void MoveToWorldPosition(Vector3 targetWorldPos, Vector3 targetScale, bool animate)
+        public void MoveToWorldPosition(Vector3 targetWorldPos, bool animate)
         {
             // Skip if we are already exactly where we need to be
-            if (Vector3.Distance(transform.position, targetWorldPos) < 0.001f &&
-                Vector3.Distance(transform.localScale, targetScale) < 0.001f)
+            // todo: not the proper way to solve this
+            if (Vector3.Distance(transform.position, targetWorldPos) < 0.001f)
                 return;
 
             StopAllMovement();
     
             if (animate)
-            {
-                var seq = Sequence.Create();
-                
-                AssignSequence(seq);
-                
-                seq.Group(Tween.Position(transform, targetWorldPos, duration: 0.35f, ease: Ease.OutQuad))
-                    .Group(Tween.Scale(transform, targetScale, duration: 0.35f, ease: Ease.OutQuad));
-            }
+                Tween.Position(transform, targetWorldPos, duration: 0.35f, ease: Ease.OutQuad);
             else
-            {
-                // Instant snap
-                StopAllMovement();
                 transform.position = targetWorldPos;
-                transform.localScale = targetScale;
-            }
         }
 
         public void OnRelease()

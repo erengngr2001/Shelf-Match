@@ -16,20 +16,19 @@ namespace Managers
             Matching
         }
 
-        public Transform[] StackSlots;
-        public Transform Stack;
-
-        private List<ObjectView> _logicStack = new List<ObjectView>(5);
+        private const int MATCH_REQUIREMENT = 3;
+        private const int LOGICAL_STACK_LIMIT = 5;
+        
+        private List<ObjectView> _logicStack = new List<ObjectView>(LOGICAL_STACK_LIMIT);
         private List<ObjectView> _visualStack = new List<ObjectView>(10);
         
         private Dictionary<ObjectView, StackItemState> _itemStates = new Dictionary<ObjectView, StackItemState>(10);
-        
-        private ObjectView[] _matchBuffer = new ObjectView[3];
 
-        private bool _isFailing = false;
+        private ObjectView[] _matchBuffer = new ObjectView[MATCH_REQUIREMENT];
+
         private bool _isVisualProcessing = false;
 
-        public bool IsFull => _logicStack.Count >= 5 || _isFailing;
+        public bool IsFull => _logicStack.Count >= LOGICAL_STACK_LIMIT;
 
          public void ManualUpdate()
          {
@@ -46,6 +45,13 @@ namespace Managers
             obj.SetState(ObjectState.Collected);
             _itemStates[obj] = StackItemState.Flying;
 
+            obj.transform.position = CameraUtilities.SwitchCameraSpace(
+                obj.transform.position, 
+                GameManager.Instance.EnvironmentCamera, 
+                GameManager.Instance.StackCamera
+            );
+            obj.gameObject.layer = LayerMask.NameToLayer("Stack");
+
             var hasLogicalMatch = false;
             var matchedLogicId = string.Empty;
             
@@ -58,7 +64,7 @@ namespace Managers
                         matchCount++;
                 }
 
-                if (matchCount >= 3)
+                if (matchCount >= MATCH_REQUIREMENT)
                 {
                     hasLogicalMatch = true;
                     matchedLogicId = _logicStack[i].Id.Value;
@@ -76,32 +82,25 @@ namespace Managers
                         _logicStack.RemoveAt(k);
                         removed++;
                         
-                        if (removed == 3) 
+                        if (removed == MATCH_REQUIREMENT) 
                             break;
                     }
                 }
             }
-            else if (_logicStack.Count >= 5)
-            {
-                _isFailing = true; 
-            }
 
-            var visualIndex = Mathf.Min(_visualStack.Count - 1, StackSlots.Length - 1);
-            var targetSlot = StackSlots[visualIndex];
+            var levelScreen = LevelManager.Instance.LevelScreen;
+
+            var visualIndex = Mathf.Min(_visualStack.Count - 1, levelScreen.StackSlots.Length - 1);
+            var targetSlot = levelScreen.StackSlots[visualIndex];
             
             obj.Renderer.sortingOrder = 100 + _visualStack.Count - 1; 
             
-            var moveSeq = Sequence.Create();
-            obj.AssignSequence(moveSeq);
-            
-            moveSeq.Group(Tween.Position(obj.transform, targetSlot.position, 0.25f, Ease.OutQuad))
-                   .Group(Tween.Scale(obj.transform, obj.DefaultScale, 0.25f, Ease.OutQuad));
-            
-            // todo: allocates
-            moveSeq.OnComplete(this, (stack) => {
-                stack._itemStates[obj] = StackItemState.Resting;
-                stack.ProcessVisualStack();
-            });
+            Tween.Position(obj.transform, targetSlot.position, 0.25f, Ease.OutQuad)
+                // todo: allocates
+                .OnComplete(this, (stack) => {
+                    stack._itemStates[obj] = StackItemState.Resting;
+                    stack.ProcessVisualStack();
+                });
         }
         
         public void Clear()
@@ -123,7 +122,6 @@ namespace Managers
             for (var i = 0; i < _matchBuffer.Length; i++) 
                 _matchBuffer[i] = null;
 
-            _isFailing = false;
             _isVisualProcessing = false;
         }
         
@@ -145,9 +143,6 @@ namespace Managers
     
             _visualStack.Remove(item);
             _itemStates.Remove(item);
-    
-            // todo: What happens if I undo after losing? Temporarily reversed the failing state
-            _isFailing = false; 
 
             item.StopAllMovement();
 
@@ -176,14 +171,14 @@ namespace Managers
                     if (mainObj.Id.Value == otherObj.Id.Value && 
                         _itemStates[otherObj] == StackItemState.Resting)
                     {
-                        if (count < 3) 
+                        if (count < MATCH_REQUIREMENT) 
                             _matchBuffer[count] = otherObj;
                         
                         count++;
                     }
                 }
 
-                if (count >= 3)
+                if (count >= MATCH_REQUIREMENT)
                 {
                     matchedId = _visualStack[i].Id.Value;
                     break;
@@ -195,7 +190,7 @@ namespace Managers
                 _isVisualProcessing = true;
 
                 var matchSeq = Sequence.Create();
-                for (var i = 0; i < 3; i++)
+                for (var i = 0; i < MATCH_REQUIREMENT; i++)
                 {
                     var item = _matchBuffer[i];
                     item.AssignSequence(matchSeq);
@@ -212,7 +207,7 @@ namespace Managers
                 // todo: allocates
                 matchSeq.OnComplete(_matchBuffer, (buffer) => 
                 {
-                    for (var i = 0; i < 3; i++)
+                    for (var i = 0; i < MATCH_REQUIREMENT; i++)
                     {
                         var item = buffer[i];
                         _visualStack.Remove(item);      
@@ -223,14 +218,14 @@ namespace Managers
                         buffer[i] = null; 
                     }
                     
-                    LevelManager.Instance.OnItemsMatched(3);
+                    LevelManager.Instance.OnItemsMatched(MATCH_REQUIREMENT);
                     _isVisualProcessing = false;
                     
                     SlideRemainingItems(); 
                     ProcessVisualStack(); 
                 });
             }
-            else if (_isFailing && 
+            else if (_logicStack.Count >= LOGICAL_STACK_LIMIT && 
                      AreAllVisualItemsResting())
             {
                 LevelManager.Instance.TriggerFailState();
@@ -239,17 +234,19 @@ namespace Managers
 
         private void SlideRemainingItems()
         {
+            var levelScreen = LevelManager.Instance.LevelScreen;
+            
             for (var i = 0; i < _visualStack.Count; i++)
             {
                 var item = _visualStack[i];
-                var targetIndex = Mathf.Min(i, StackSlots.Length - 1);
+                var targetIndex = Mathf.Min(i, levelScreen.StackSlots.Length - 1);
                 
                 if (_itemStates[item] == StackItemState.Flying)
                 {
                     item.StopAllMovement();
                     item.Renderer.sortingOrder = 100 + i;
                     
-                    Tween.Position(item.transform, StackSlots[targetIndex].position, 0.25f, Ease.OutQuad)
+                    Tween.Position(item.transform, levelScreen.StackSlots[targetIndex].position, 0.25f, Ease.OutQuad)
                         // todo: allocates
                          .OnComplete(this, (stack) => {
                              stack._itemStates[item] = StackItemState.Resting;
@@ -268,7 +265,9 @@ namespace Managers
             if (_itemStates[item] == StackItemState.Matching) 
                 return;
 
-            var targetIndex = Mathf.Min(_visualStack.IndexOf(item), StackSlots.Length - 1);
+            var levelScreen = LevelManager.Instance.LevelScreen;
+            
+            var targetIndex = Mathf.Min(_visualStack.IndexOf(item), levelScreen.StackSlots.Length - 1);
             var currentVisualSlot = FindClosestSlotIndex(item.transform.position.x);
 
             if (currentVisualSlot > targetIndex && 
@@ -278,7 +277,7 @@ namespace Managers
                 item.Renderer.sortingOrder = 100 + targetIndex; 
 
                 var nextIdx = currentVisualSlot - 1;
-                var nextPos = StackSlots[nextIdx].position;
+                var nextPos = levelScreen.StackSlots[nextIdx].position;
                 var jumpDuration = 0.18f;
 
                 var stepSeq = Sequence.Create();
@@ -318,9 +317,11 @@ namespace Managers
             var closestIdx = 0;
             var minDistance = float.MaxValue;
             
-            for (var i = 0; i < StackSlots.Length; i++) 
+            var levelScreen = LevelManager.Instance.LevelScreen;
+            
+            for (var i = 0; i < levelScreen.StackSlots.Length; i++) 
             {
-                var distance = Mathf.Abs(StackSlots[i].position.x - xPos);
+                var distance = Mathf.Abs(levelScreen.StackSlots[i].position.x - xPos);
                 if (distance < minDistance) 
                 {
                     minDistance = distance;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Game;
 using Level.Objects;
 using Level.Shelf;
+using UI;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -24,6 +25,7 @@ namespace Managers
         public ShelfManager ShelfManager;
         public ObjectManager ObjectManager;
         public StackManager StackManager;
+        public UILevelScreen LevelScreen;
         
         public LevelState State { get; private set; }
         

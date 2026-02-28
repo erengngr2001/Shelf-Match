@@ -11,7 +11,6 @@ namespace Managers
     {
         [Header("References")]
         public Transform EnvironmentContainer;
-        public float CurrentEnvironmentScale { get; private set; } = 1f;
 
         [Header("Layout Settings")]
         public float ShelfSpacingY;
@@ -67,8 +66,10 @@ namespace Managers
             var scaleY = MaxPlayAreaHeight / totalActualHeight;
             var finalScale = Mathf.Min(scaleX, scaleY, 1f);
 
-            EnvironmentContainer.localScale = new Vector3(finalScale, finalScale, 1f);
-            CurrentEnvironmentScale = finalScale;
+            var gameManager = GameManager.Instance;
+            var levelManager = LevelManager.Instance;
+            
+            gameManager.EnvironmentCamera.orthographicSize = levelManager.BaselineCameraSize / finalScale;
         }
 
         public void ExtractObjectFromShelf(ShelfView shelf, ObjectView obj)
@@ -107,8 +108,6 @@ namespace Managers
             if (currentActiveLayer == -1) 
                 return;
 
-            var startX = -(shelf.Data.Width - 1) * ItemVisualWidth / 2f;
-
             for (var x = 0; x < shelf.Data.Width; x++)
             {
                 for (var layer = 0; layer < shelf.ColumnMaxDepths[x]; layer++)
@@ -126,7 +125,8 @@ namespace Managers
                     obj.SetStateByRelativeDepth(relativeDepth);
 
                     var targetWorldPos = GetWorldPositionForSlot(shelf, x, layer);
-                    var targetScale = obj.DefaultScale * CurrentEnvironmentScale;
+                    var targetScale = obj.DefaultScale;
+                    
                     obj.MoveToWorldPosition(targetWorldPos, targetScale, animate);
                 }
             }
@@ -204,35 +204,6 @@ namespace Managers
             return 0; 
         }
 
-        // public void ReturnObjectToShelf(ObjectView item, ShelfSlotPointer slot)
-        // {
-        //     var shelf = slot.Shelf;
-        //     var x = slot.X;
-        //     var layer = slot.Layer;
-        //     
-        //     shelf.AddObject(item, x, layer);
-        //
-        //     item.Init(item.Id, item.Renderer.sprite, shelf, x, layer);
-        //     item.SetState(ObjectState.Collected);
-        //     item.transform.SetParent(shelf.ItemContainer.transform, true);
-        //
-        //     var targetLocalPos = GetLocalPositionForSlot(shelf, x, layer); 
-        //
-        //     var undoSeq = Sequence.Create();
-        //     item.AssignSequence(undoSeq);
-        //     
-        //     undoSeq.Group(Tween.LocalPosition(item.transform, targetLocalPos, 0.3f, Ease.OutQuad))
-        //         .Group(Tween.Scale(item.transform, Vector3.one, 0.3f, Ease.OutQuad));
-        //
-        //     UpdateShelfVisuals(shelf, true);
-        //     
-        //     // todo: allocates
-        //     undoSeq.OnComplete(this, (manager) => {
-        //         item.SetState(ObjectState.None);
-        //         manager.UpdateAllShelvesVisuals(); 
-        //     });
-        // }
-        
         public void ReturnObjectToShelf(ObjectView item, ShelfSlotPointer slot)
         {
             var shelf = slot.Shelf;
@@ -245,8 +216,15 @@ namespace Managers
             item.SetState(ObjectState.Collected);
     
             var targetWorldPos = GetWorldPositionForSlot(shelf, x, layer); 
+
+            item.transform.position = GameManager.Instance.SwitchCameraSpace(
+                item.transform.position, 
+                GameManager.Instance.StackCamera, 
+                GameManager.Instance.EnvironmentCamera
+            );
+            item.gameObject.layer = LayerMask.NameToLayer("Interactable");
     
-            var targetScale = item.DefaultScale * CurrentEnvironmentScale;
+            var targetScale = item.DefaultScale;
 
             var undoSeq = Sequence.Create();
             item.AssignSequence(undoSeq);

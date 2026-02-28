@@ -46,6 +46,13 @@ namespace Managers
             obj.SetState(ObjectState.Collected);
             _itemStates[obj] = StackItemState.Flying;
 
+            obj.transform.position = GameManager.Instance.SwitchCameraSpace(
+                obj.transform.position, 
+                GameManager.Instance.EnvironmentCamera, 
+                GameManager.Instance.StackCamera
+            );
+            obj.gameObject.layer = LayerMask.NameToLayer("Stack");
+
             var hasLogicalMatch = false;
             var matchedLogicId = string.Empty;
             

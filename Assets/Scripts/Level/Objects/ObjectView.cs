@@ -24,7 +24,7 @@ namespace Level.Objects
         public SpriteRenderer Renderer;
         public PolygonCollider2D Collider;
         
-        public Vector3 DefaultScale { get; private set; }
+        public Vector3 DefaultScale { get; private set; } = Vector3.one;
         
         public ObjectState State { get; private set; }
 
@@ -43,11 +43,6 @@ namespace Level.Objects
         private readonly Color32 BACK_COLOR = new (125, 125, 125, 255);
         
         private Sequence _activeSequence;
-
-        private void Awake()
-        {
-            DefaultScale = transform.localScale;
-        }
 
         public void Init(ObjectId id, Sprite itemSprite, ShelfView parentShelf, int gridX, int layerIndex)
         {

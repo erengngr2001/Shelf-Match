@@ -131,7 +131,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 96995276}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: StackSlot (4)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -246,7 +246,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 160401113}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Slots
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -282,7 +282,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 227798982}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: StackSlot (5)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -405,7 +405,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 312756546}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Objects
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -468,7 +468,7 @@ GameObject:
   m_Component:
   - component: {fileID: 420933926}
   - component: {fileID: 420933927}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: ObjectStack
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -606,10 +606,10 @@ Camera:
   field of view: 60
   orthographic: 1
   orthographic size: 50
-  m_Depth: -1
+  m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 119
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -728,6 +728,89 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 7, y: 7.5}
   m_EdgeRadius: 0
+--- !u!1 &870276101
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 870276104}
+  - component: {fileID: 870276103}
+  m_Layer: 0
+  m_Name: UICamera
+  m_TagString: MainCamera
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!20 &870276103
+Camera:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 870276101}
+  m_Enabled: 1
+  serializedVersion: 2
+  m_ClearFlags: 3
+  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_projectionMatrixMode: 1
+  m_GateFitMode: 2
+  m_FOVAxisMode: 0
+  m_Iso: 200
+  m_ShutterSpeed: 0.005
+  m_Aperture: 16
+  m_FocusDistance: 10
+  m_FocalLength: 50
+  m_BladeCount: 5
+  m_Curvature: {x: 2, y: 11}
+  m_BarrelClipping: 0.25
+  m_Anamorphism: 0
+  m_SensorSize: {x: 36, y: 24}
+  m_LensShift: {x: 0, y: 0}
+  m_NormalizedViewPortRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+  near clip plane: 0.3
+  far clip plane: 1000
+  field of view: 60
+  orthographic: 1
+  orthographic size: 50
+  m_Depth: 1
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 128
+  m_RenderingPath: -1
+  m_TargetTexture: {fileID: 0}
+  m_TargetDisplay: 0
+  m_TargetEye: 0
+  m_HDR: 1
+  m_AllowMSAA: 0
+  m_AllowDynamicResolution: 0
+  m_ForceIntoRT: 0
+  m_OcclusionCulling: 0
+  m_StereoConvergence: 10
+  m_StereoSeparation: 0.022
+--- !u!4 &870276104
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 870276101}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -10}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1013929848
 GameObject:
   m_ObjectHideFlags: 0
@@ -831,7 +914,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1150053409}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: StackSlot (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -998,7 +1081,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b65fd1231257c174686de8690c051a16, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ActiveObjectsContainer: {fileID: 312756546}
+  ActiveObjectsContainer: {fileID: 0}
   ItemVisualWidth: 9
 --- !u!1 &1458789628
 GameObject:
@@ -1009,7 +1092,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1458789629}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: StackSlot (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1078,6 +1161,7 @@ MonoBehaviour:
   ShelfManager: {fileID: 1871292672}
   ObjectManager: {fileID: 1314514853}
   StackManager: {fileID: 1181889100}
+  BaselineCameraSize: 50
 --- !u!1 &1685966550
 GameObject:
   m_ObjectHideFlags: 0
@@ -1125,7 +1209,9 @@ MonoBehaviour:
   PoolsData: {fileID: 11400000, guid: 3b9b902fd6307a44193b59078b07ce04, type: 2}
   LevelManager: {fileID: 1499957001}
   InputManager: {fileID: 1164590076}
-  CurrentLevel: 1
+  EnvironmentCamera: {fileID: 519420031}
+  StackCamera: {fileID: 870276103}
+  CurrentLevel: 2
 --- !u!1 &1720532533
 GameObject:
   m_ObjectHideFlags: 0
@@ -1270,7 +1356,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2022402944}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: StackSlot (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1297,6 +1383,7 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 519420032}
+  - {fileID: 870276104}
   - {fileID: 1013929849}
   - {fileID: 1074771209}
   - {fileID: 403861222}

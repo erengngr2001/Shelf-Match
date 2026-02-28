@@ -25,6 +25,9 @@ namespace Managers
         public ObjectManager ObjectManager;
         public StackManager StackManager;
         
+        [Header("Level Camera Settings")]
+        public float BaselineCameraSize = 50f;
+        
         public LevelState State { get; private set; }
         
         private int _currentLevelNumber;

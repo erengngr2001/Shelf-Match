@@ -96,9 +96,11 @@ namespace Managers
             obj.Renderer.sortingOrder = 100 + _visualStack.Count - 1; 
             
             Tween.Position(obj.transform, targetSlot.position, 0.25f, Ease.OutQuad)
-                // todo: allocates
-                .OnComplete(this, (stack) => {
-                    stack._itemStates[obj] = StackItemState.Resting;
+                .OnComplete(obj, targetObj => 
+                {
+                    var stack = LevelManager.Instance.StackManager;
+        
+                    stack._itemStates[targetObj] = StackItemState.Resting;
                     stack.ProcessVisualStack();
                 });
         }
@@ -204,25 +206,27 @@ namespace Managers
                             .Group(Tween.Scale(item.transform, targetScale, 0.3f, Ease.OutBack));
                 }
 
-                // todo: allocates
-                matchSeq.OnComplete(_matchBuffer, (buffer) => 
+                matchSeq.OnComplete(this, stack => 
                 {
                     for (var i = 0; i < MATCH_REQUIREMENT; i++)
                     {
-                        var item = buffer[i];
-                        _visualStack.Remove(item);      
-                        _itemStates.Remove(item);
-                        
-                        item.OnRelease();
-                        GamePools.Instance.ObjectViewPool.Release(item);
-                        buffer[i] = null; 
+                        var matchedItem = stack._matchBuffer[i];
+        
+                        stack._visualStack.Remove(matchedItem);      
+                        stack._itemStates.Remove(matchedItem);
+        
+                        matchedItem.OnRelease();
+                        GamePools.Instance.ObjectViewPool.Release(matchedItem);
+        
+                        stack._matchBuffer[i] = null; 
                     }
                     
                     LevelManager.Instance.OnItemsMatched(MATCH_REQUIREMENT);
-                    _isVisualProcessing = false;
-                    
-                    SlideRemainingItems(); 
-                    ProcessVisualStack(); 
+    
+                    stack._isVisualProcessing = false;
+    
+                    stack.SlideRemainingItems(); 
+                    stack.ProcessVisualStack(); 
                 });
             }
             else if (_logicStack.Count >= LOGICAL_STACK_LIMIT && 
@@ -247,11 +251,13 @@ namespace Managers
                     item.Renderer.sortingOrder = 100 + i;
                     
                     Tween.Position(item.transform, levelScreen.StackSlots[targetIndex].position, 0.25f, Ease.OutQuad)
-                        // todo: allocates
-                         .OnComplete(this, (stack) => {
-                             stack._itemStates[item] = StackItemState.Resting;
-                             stack.ProcessVisualStack();
-                         });
+                        .OnComplete(item, targetItem => 
+                        {
+                            var stack = LevelManager.Instance.StackManager;
+         
+                            stack._itemStates[targetItem] = StackItemState.Resting;
+                            stack.ProcessVisualStack();
+                        });
                 }
                 else
                 {

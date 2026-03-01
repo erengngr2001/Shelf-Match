@@ -233,11 +233,11 @@ namespace Managers
             item.gameObject.layer = LayerMask.NameToLayer("Interactable");
 
             Tween.Position(item.transform, targetWorldPos, 0.3f, Ease.OutQuad)
-                // todo: allocates
-                .OnComplete(this, (manager) => {
-                item.SetState(ObjectState.None);
-                manager._isVisualsDirty = true; 
-            });
+                .OnComplete(item, obj => 
+                {
+                    obj.SetState(ObjectState.None);
+                    LevelManager.Instance.ShelfManager._isVisualsDirty = true; 
+                });
 
             UpdateShelfVisuals(shelf, true);
     

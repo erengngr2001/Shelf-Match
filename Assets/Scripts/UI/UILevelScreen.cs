@@ -38,11 +38,13 @@ namespace UI
 
         public void ShowWinScreen()
         {
+            HideUIElements();
             WinScreen.Show();
         }
 
         public void ShowLoseScreen()
         {
+            HideUIElements();
             LoseScreen.Show();
         }
 
@@ -50,6 +52,18 @@ namespace UI
         {
             WinScreen.HideSilent();
             LoseScreen.HideSilent();
+        }
+        
+        public void HideUIElements()
+        {
+            UndoButton.Hide();
+            RestartButton.Hide();
+        }
+        
+        public void ShowUIElements()
+        {
+            UndoButton.Show();
+            RestartButton.Show();
         }
     }
 }

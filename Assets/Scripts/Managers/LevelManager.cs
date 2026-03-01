@@ -89,6 +89,7 @@ namespace Managers
             
             ClearLevel();
             LevelScreen.CloseSubscreens();
+            LevelScreen.ShowUIElements();
 
             var levelFile = Resources.Load<TextAsset>($"Levels/level{levelNumber}");
             if (levelFile == null)
@@ -115,8 +116,6 @@ namespace Managers
             if (StackManager.IsFull) 
                 return;
             
-            Debug.Log($"[TAP] Extracted '{clickedObj.Id.Value}' from Shelf {clickedObj.ParentShelf.ShelfIndex}");
-            
             ShelfManager.ExtractObjectFromShelf(clickedObj.ParentShelf, clickedObj);
             StackManager.AddItem(clickedObj);
         }
@@ -126,7 +125,7 @@ namespace Managers
             if (State != LevelState.Playing) 
                 return;
             
-            Debug.Log($"[HOLD] Player is inspecting '{heldObj.Id.Value}'");
+            // todo: show back on hold
         }
         
         public void OnItemsMatched(int count) 
@@ -143,7 +142,6 @@ namespace Managers
             if (totalItemsRemainingInLevel <= 0)
             {
                 State = LevelState.Win;
-                Debug.Log("LevelManager: WIN STATE! Level Cleared.");
                 
                 // todo: allocates?
                 LevelScreen.ShowWinScreen();

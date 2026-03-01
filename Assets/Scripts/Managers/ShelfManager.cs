@@ -4,6 +4,7 @@ using Level.Objects;
 using Level.Shelf;
 using PrimeTween;
 using UnityEngine;
+using UnityEngine.Pool;
 
 namespace Managers
 {
@@ -149,7 +150,8 @@ namespace Managers
             result = default;
 
             // Original Position is available
-            if (item.ParentShelf.IsSlotEmpty(item.GridX, item.LayerIndex))
+            if (item.ParentShelf.CurrentFrontLayer == item.LayerIndex && 
+                item.ParentShelf.IsSlotEmpty(item.GridX, item.LayerIndex))
             {
                 result = new ShelfSlotPointer
                 {
@@ -162,40 +164,52 @@ namespace Managers
             }
 
             // First available empty slot on any active layer
+            using var _ = ListPool<ShelfSlotPointer>.Get(out var availableSlots);
+
             foreach (var shelf in ActiveShelves)
             {
                 var activeLayer = GetFrontmostActiveLayer(shelf);
                 for (var x = 0; x < shelf.Data.Width; x++)
                 {
-                    if (shelf.IsSlotEmpty(x, activeLayer))
+                    // Ensure the slot exists within the column's valid depth bounds and is empty
+                    if (activeLayer < shelf.ColumnMaxDepths[x] && 
+                        shelf.IsSlotEmpty(x, activeLayer))
                     {
-                        result = new ShelfSlotPointer
+                        availableSlots.Add(new ShelfSlotPointer
                         {
                             Shelf = shelf, 
                             X = x, 
                             Layer = activeLayer
-                        };
-                        
-                        return true;
+                        });
                     }
                 }
             }
 
+            if (availableSlots.Count > 0)
+            {
+                var randomIndex = Random.Range(0, availableSlots.Count);
+                result = availableSlots[randomIndex];
+                return true;
+            }
+
+            // No empty slots could be found, return false to ignore the undo action
+            // todo: put a floating text object here so the user gets a feedback
             return false;
         }
 
-        // todo: ensure this works correctly, try edge cases
         private int GetFrontmostActiveLayer(ShelfView shelf)
         {
             for (var layer = 0; layer < shelf.Data.LayerCount; layer++)
             {
                 for (var x = 0; x < shelf.Data.Width; x++)
                 {
-                    if (!shelf.IsSlotEmpty(x, layer))
+                    if (layer < shelf.ColumnMaxDepths[x] && 
+                        !shelf.IsSlotEmpty(x, layer))
                         return layer;
                 }
             }
-            return 0; 
+            // Fallback to the current front layer if the shelf happens to be completely cleared
+            return shelf.CurrentFrontLayer; 
         }
 
         public void ReturnObjectToShelf(ObjectView item, ShelfSlotPointer slot)
@@ -230,22 +244,7 @@ namespace Managers
         }
         
         #endregion
-        
-        private Vector3 GetLocalPositionForSlot(ShelfView shelf, int x, int layer)
-        {
-            var currentActiveLayer = GetFrontmostActiveLayer(shelf);
-            var startX = -(shelf.Data.Width - 1) * ItemVisualWidth / 2f;
-    
-            var relativeDepth = layer - currentActiveLayer;
-    
-            var visualDepth = Mathf.Clamp(relativeDepth, 0, 2);
-    
-            var posX = startX + (x * ItemVisualWidth);
-            var posY = ItemOffsetY + (visualDepth * LayerOffset.y);
-    
-            return new Vector3(posX, posY, 0f);
-        }
-        
+
         private Vector3 GetWorldPositionForSlot(ShelfView shelf, int x, int layer)
         {
             var currentActiveLayer = GetFrontmostActiveLayer(shelf);

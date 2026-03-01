@@ -1,3 +1,4 @@
+using System;
 using Managers;
 using UnityEngine;
 
@@ -7,6 +8,9 @@ namespace UI
     {
         public UIButton UndoButton;
         public UIButton RestartButton;
+
+        public UIWinScreen WinScreen;
+        public UILoseScreen LoseScreen;
 
         public Transform[] StackSlots;
 
@@ -30,6 +34,22 @@ namespace UI
         private void OnRestartClicked()
         {
             LevelManager.Instance.RestartLevel();
+        }
+
+        public void ShowWinScreen()
+        {
+            WinScreen.Show();
+        }
+
+        public void ShowLoseScreen()
+        {
+            LoseScreen.Show();
+        }
+
+        public void CloseSubscreens()
+        {
+            WinScreen.HideSilent();
+            LoseScreen.HideSilent();
         }
     }
 }

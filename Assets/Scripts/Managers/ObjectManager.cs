@@ -27,35 +27,93 @@ namespace Managers
             foreach (var shelf in activeShelves)
                 totalSlots += shelf.Data.Width * shelf.Data.LayerCount;
 
+            // If the total shelf space is not a multiple of 3,
+            // we reduce total item count to a multiple of 3
             var totalItemsToPlace = (totalSlots / 3) * 3;
 
             CalculateColumnDepths(activeShelves, totalItemsToPlace);
 
-            for (var triplet = 0; triplet < totalItemsToPlace / 3; triplet++)
+            using var h1 = ListPool<ShelfSlotPointer>.Get(out var allSlots);
+            foreach (var shelf in activeShelves)
             {
-                var randomSprite = _availableItemSprites[Random.Range(0, _availableItemSprites.Count)];
-                var id = new ObjectId(randomSprite.name);
-
-                for (var i = 0; i < 3; i++)
+                for (var x = 0; x < shelf.Data.Width; x++)
                 {
-                    using var _ = ListPool<ShelfSlotPointer>.Get(out var openSlots);
-                    GetAvailableBackmostSlots(activeShelves, openSlots);
-                    
-                    if (openSlots.Count == 0) 
-                        break;
+                    var maxDepth = shelf.GetColumnDepth(x);
+                    for (var layer = 0; layer < maxDepth; layer++)
+                        allSlots.Add(new ShelfSlotPointer
+                        {
+                            Shelf = shelf, 
+                            X = x, 
+                            Layer = layer
+                        });
+                }
+            }
 
-                    var slot = openSlots[Random.Range(0, openSlots.Count)];
-                    var obj = GamePools.Instance.ObjectViewPool.Get();
+            using var h2 = GenericPool<SortedDictionary<int, List<ShelfSlotPointer>>>.Get(out var slotsByLayer);
+            slotsByLayer.Clear();
+            foreach (var slot in allSlots)
+            {
+                if (!slotsByLayer.TryGetValue(slot.Layer, out var layerList))
+                {
+                    layerList = ListPool<ShelfSlotPointer>.Get();
+                    slotsByLayer[slot.Layer] = layerList;
+                }
+        
+                layerList.Add(slot);
+            }
+
+            using var h3 = ListPool<ShelfSlotPointer>.Get(out var orderedSlots);
+            foreach (var kvp in slotsByLayer)
+            {
+                var layerSlots = kvp.Value;
+                ShuffleList(layerSlots);
+                orderedSlots.AddRange(layerSlots);
+        
+                ListPool<ShelfSlotPointer>.Release(layerSlots);
+            }
+
+            var totalTriplets = totalItemsToPlace / 3;
+            using var h4 = ListPool<Sprite>.Get(out var tripletDeck);
+            
+            // Object placement is still randomized but the total number of created objects for each type
+            // is not completely randomized. This prevents levels consisting of too much repetition of a 
+            // single object type. It does not harm randomization but makes it feel better overall.
+            // Result: You get an even amount of different objects
+            for (var i = 0; i < totalTriplets; i++)
+                tripletDeck.Add(_availableItemSprites[i % _availableItemSprites.Count]);
+
+            ShuffleList(tripletDeck);
+
+            for (var i = 0; i < totalTriplets; i++)
+            {
+                var selectedSprite = tripletDeck[i];
+                var id = new ObjectId(selectedSprite.name);
+
+                for (var j = 0; j < 3; j++)
+                {
+                    var slot = orderedSlots[(i * 3) + j];
                     
+                    var obj = GamePools.Instance.ObjectViewPool.Get();
                     obj.gameObject.layer = LayerMask.NameToLayer("Interactable");
                     obj.transform.localScale = obj.DefaultScale;
                     
-                    obj.Init(id, randomSprite, slot.Shelf, slot.X, slot.Layer);
+                    obj.Init(id, selectedSprite, slot.Shelf, slot.X, slot.Layer);
                     slot.Shelf.AddObject(obj, slot.X, slot.Layer);
                 }
             }
             
             return totalItemsToPlace;
+        }
+
+        private void ShuffleList<T>(List<T> list)
+        {
+            for (var i = 0; i < list.Count; i++)
+            {
+                var temp = list[i];
+                var randomIndex = Random.Range(i, list.Count);
+                list[i] = list[randomIndex];
+                list[randomIndex] = temp;
+            }
         }
 
         private void CalculateColumnDepths(List<ShelfView> activeShelves, int totalItems)
@@ -82,33 +140,6 @@ namespace Managers
                 }
                 
                 currentLayer++;
-            }
-        }
-
-        private void GetAvailableBackmostSlots(List<ShelfView> activeShelves, List<ShelfSlotPointer> results)
-        {
-            results.Clear();
-            
-            foreach (var shelf in activeShelves)
-            {
-                for (var x = 0; x < shelf.Data.Width; x++)
-                {
-                    var maxDepth = shelf.GetColumnDepth(x);
-                    for (var layer = maxDepth - 1; layer >= 0; layer--)
-                    {
-                        if (shelf.IsSlotEmpty(x, layer))
-                        {
-                            results.Add(new ShelfSlotPointer
-                            {
-                                Shelf = shelf, 
-                                X = x, 
-                                Layer = layer
-                            });
-                            
-                            break; 
-                        }
-                    }
-                }
             }
         }
 

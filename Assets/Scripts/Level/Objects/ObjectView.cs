@@ -122,6 +122,7 @@ namespace Level.Objects
                     Renderer.color = BACK_COLOR;
                     break;
                 case ObjectState.Hidden:
+                    Collider.enabled = false;
                     Renderer.enabled = false;
                     break;
                 case ObjectState.Collected:

@@ -164,12 +164,15 @@ namespace Managers
                 return;
 
             var itemToUndo = StackManager.PeekLastItem();
-            if (itemToUndo == null) 
+            if (itemToUndo == null)
+            {
+                UIFloatingText.Show("No items to return!");
                 return;
+            }
 
             if (!ShelfManager.TryGetValidUndoSlot(itemToUndo, out var targetSlot)) 
             {
-                Debug.Log("Undo Ignored: No valid position available.");
+                UIFloatingText.Show("No available space to Undo!");
                 return; 
             }
 

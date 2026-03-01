@@ -143,7 +143,6 @@ namespace Managers
             {
                 State = LevelState.Win;
                 
-                // todo: allocates?
                 LevelScreen.ShowWinScreen();
             }
         }

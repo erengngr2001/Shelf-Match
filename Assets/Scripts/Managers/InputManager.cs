@@ -1,15 +1,27 @@
+using System;
 using Game;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 namespace Managers
 {
+    [Serializable]
+    public struct InputCameraGroup
+    {
+        // The camera defining the world space for this layer group
+        public Camera ReferenceCamera;
+        // The layers this specific camera is allowed to interact with
+        public LayerMask InteractableMask;
+    }
+
     public class InputManager : MonoBehaviour, IManualUpdate
     {
-        public LayerMask InteractableLayerMask;
+        [Header("Input Evaluation Order (Top to Bottom)")]
+        public InputCameraGroup[] InputGroups;
+        
+        [Header("Settings")]
         public float HoldDurationThreshold; 
         public float DragCancelThreshold; 
-        public Camera MainCamera;
         
         private bool _isPointerDown;
         private float _pointerDownTimer;
@@ -34,20 +46,29 @@ namespace Managers
             if (IsPointerOverUI()) 
                 return;
 
-            var worldPosition = MainCamera.ScreenToWorldPoint(screenPosition);
-            
-            var hitCollider = Physics2D.OverlapCircle(worldPosition, _touchRadius, InteractableLayerMask);
-            if (hitCollider != null && 
-                hitCollider.TryGetComponent<IInteractable>(out var interactable))
+            // Iterate through our cameras in order of priority
+            foreach (var group in InputGroups)
             {
-                if (interactable.CanInteract)
+                var worldPosition = group.ReferenceCamera.ScreenToWorldPoint(screenPosition);
+                
+                var hitCollider = Physics2D.OverlapCircle(worldPosition, _touchRadius, group.InteractableMask);
+                if (hitCollider != null && 
+                    hitCollider.TryGetComponent<IInteractable>(out var interactable))
                 {
-                    _isPointerDown = true;
-                    _holdTriggered = false;
-                    _pointerDownTimer = 0f;
-                    _pointerDownPosition = screenPosition;
-                    _hoveredInteractable = interactable;
-                    _hoveredInteractable.InteractDown();
+                    if (interactable.CanInteract)
+                    {
+                        _isPointerDown = true;
+                        _holdTriggered = false;
+                        _pointerDownTimer = 0f;
+                        _pointerDownPosition = screenPosition;
+                        _hoveredInteractable = interactable;
+                        
+                        _hoveredInteractable.InteractDown();
+                        
+                        // Return if you hit some target in priority 
+                        // Prevents multiple interactions on a single click
+                        return; 
+                    }
                 }
             }
         }
@@ -89,9 +110,7 @@ namespace Managers
                     _hoveredInteractable.InteractTapped();
             }
 
-            _isPointerDown = false;
-            _hoveredInteractable = null;
-            _holdTriggered = false;
+            ResetInputState();
         }
 
         private void CancelInput()
@@ -99,6 +118,11 @@ namespace Managers
             if (_hoveredInteractable != null)
                 _hoveredInteractable.InteractCancel();
             
+            ResetInputState();
+        }
+
+        private void ResetInputState()
+        {
             _isPointerDown = false;
             _hoveredInteractable = null;
             _holdTriggered = false;

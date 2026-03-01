@@ -12,8 +12,8 @@ namespace UI
         {
             base.Show(onComplete);
             
-            // Wait 2.5 seconds, then hide the screen (which fires the callback)
-            Tween.Delay(SCREEN_CLOSE_DELAY).OnComplete(this, screen => {
+            Tween.Delay(SCREEN_CLOSE_DELAY)
+                .OnComplete(this, screen => {
                 screen.Hide();
                 GameManager.Instance.LevelCompleted();
             });

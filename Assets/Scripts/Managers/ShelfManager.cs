@@ -23,10 +23,16 @@ namespace Managers
         public Vector3 LayerOffset;
 
         public List<ShelfView> ActiveShelves { get; private set; } = new List<ShelfView>();
+        
+        private bool _isVisualsDirty;
 
         public void ManualUpdate()
         {
-            // Frame-by-frame shelf logic (animations etc.) will go here
+            if (!_isVisualsDirty)
+                return;
+            
+            _isVisualsDirty = false;
+            UpdateAllShelvesVisuals();
         }
         
         public void GenerateShelves(List<ShelfData> shelfDataList)
@@ -60,7 +66,9 @@ namespace Managers
             var scaleY = MaxPlayAreaHeight / totalActualHeight;
             var finalScale = Mathf.Min(scaleX, scaleY, 1f);
 
-            EnvironmentContainer.localScale = new Vector3(finalScale, finalScale, 1f);
+            var gameManager = GameManager.Instance;
+
+            gameManager.EnvironmentCamera.orthographicSize = CameraUtilities.BaselineCameraSize / finalScale;
         }
 
         public void ExtractObjectFromShelf(ShelfView shelf, ObjectView obj)
@@ -99,8 +107,6 @@ namespace Managers
             if (currentActiveLayer == -1) 
                 return;
 
-            var startX = -(shelf.Data.Width - 1) * ItemVisualWidth / 2f;
-
             for (var x = 0; x < shelf.Data.Width; x++)
             {
                 for (var layer = 0; layer < shelf.ColumnMaxDepths[x]; layer++)
@@ -117,11 +123,9 @@ namespace Managers
 
                     obj.SetStateByRelativeDepth(relativeDepth);
 
-                    var visualDepth = Mathf.Min(relativeDepth, 2);
-                    var posX = startX + (x * ItemVisualWidth);
-                    var posY = ItemOffsetY + (visualDepth * LayerOffset.y);
+                    var targetWorldPos = GetWorldPositionForSlot(shelf, x, layer);
                     
-                    obj.MoveToLocalPosition(new Vector3(posX, posY, 0f), animate);
+                    obj.MoveToWorldPosition(targetWorldPos, animate);
                 }
             }
         }
@@ -203,28 +207,30 @@ namespace Managers
             var shelf = slot.Shelf;
             var x = slot.X;
             var layer = slot.Layer;
-            
+    
             shelf.AddObject(item, x, layer);
 
             item.Init(item.Id, item.Renderer.sprite, shelf, x, layer);
             item.SetState(ObjectState.Collected);
-            item.transform.SetParent(shelf.ItemContainer.transform, true);
+    
+            var targetWorldPos = GetWorldPositionForSlot(shelf, x, layer); 
 
-            var targetLocalPos = GetLocalPositionForSlot(shelf, x, layer); 
+            item.transform.position = CameraUtilities.SwitchCameraSpace(
+                item.transform.position, 
+                GameManager.Instance.StackCamera, 
+                GameManager.Instance.EnvironmentCamera
+            );
+            item.gameObject.layer = LayerMask.NameToLayer("Interactable");
 
-            var undoSeq = Sequence.Create();
-            item.AssignSequence(undoSeq);
-            
-            undoSeq.Group(Tween.LocalPosition(item.transform, targetLocalPos, 0.3f, Ease.OutQuad))
-                .Group(Tween.Scale(item.transform, Vector3.one, 0.3f, Ease.OutQuad));
+            Tween.Position(item.transform, targetWorldPos, 0.3f, Ease.OutQuad)
+                // todo: allocates
+                .OnComplete(this, (manager) => {
+                item.SetState(ObjectState.None);
+                manager._isVisualsDirty = true; 
+            });
 
             UpdateShelfVisuals(shelf, true);
-            
-            // todo: allocates
-            undoSeq.OnComplete(this, (manager) => {
-                item.SetState(ObjectState.None);
-                manager.UpdateAllShelvesVisuals(); 
-            });
+    
         }
         
         #endregion
@@ -242,6 +248,19 @@ namespace Managers
             var posY = ItemOffsetY + (visualDepth * LayerOffset.y);
     
             return new Vector3(posX, posY, 0f);
+        }
+        
+        private Vector3 GetWorldPositionForSlot(ShelfView shelf, int x, int layer)
+        {
+            var currentActiveLayer = GetFrontmostActiveLayer(shelf);
+            var startX = -(shelf.Data.Width - 1) * ItemVisualWidth / 2f;
+            var relativeDepth = layer - currentActiveLayer;
+            var visualDepth = Mathf.Clamp(relativeDepth, 0, 2);
+
+            var localPosX = startX + (x * ItemVisualWidth);
+            var localPosY = ItemOffsetY + (visualDepth * LayerOffset.y);
+
+            return shelf.transform.TransformPoint(new Vector3(localPosX, localPosY, 0f));
         }
     } 
 }

@@ -1,4 +1,3 @@
-using System;
 using Managers;
 using UnityEngine;
 
@@ -12,7 +11,7 @@ namespace UI
         public UIButton UndoButton;
         public UIButton RestartButton;
 
-        public Transform[] StackSlotTransforms;
+        public Transform[] StackSlots;
 
         private void OnEnable()
         {
@@ -34,20 +33,6 @@ namespace UI
         private void OnRestartClicked()
         {
             LevelManager.Instance.RestartLevel();
-        }
-        
-        /// <summary>
-        /// Called by the StackManager to find where an item should physically move
-        /// </summary>
-        public Transform GetStackSlotTransform(int index)
-        {
-            if (index < 0 || index >= StackSlotTransforms.Length)
-            {
-                Debug.LogWarning($"Stack slot index {index} is out of bounds!");
-                return null;
-            }
-            
-            return StackSlotTransforms[index];
         }
     }
 }

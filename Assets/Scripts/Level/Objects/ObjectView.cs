@@ -24,6 +24,8 @@ namespace Level.Objects
         public SpriteRenderer Renderer;
         public PolygonCollider2D Collider;
         
+        public Vector3 DefaultScale { get; private set; } = Vector3.one;
+        
         public ObjectState State { get; private set; }
 
         public ObjectId Id;
@@ -41,7 +43,7 @@ namespace Level.Objects
         private readonly Color32 BACK_COLOR = new (125, 125, 125, 255);
         
         private Sequence _activeSequence;
-        
+
         public void Init(ObjectId id, Sprite itemSprite, ShelfView parentShelf, int gridX, int layerIndex)
         {
             SetState(ObjectState.None);
@@ -59,25 +61,26 @@ namespace Level.Objects
 
             Renderer.sortingOrder = -layerIndex;
         }
-        
-        public void MoveToLocalPosition(Vector3 targetPos, bool animate)
+
+        public void MoveToWorldPosition(Vector3 targetWorldPos, bool animate)
         {
-            // todo: should not be needing this
-            if (transform.localPosition == targetPos)
+            // Skip if we are already exactly where we need to be
+            // todo: not the proper way to solve this
+            if (Vector3.Distance(transform.position, targetWorldPos) < 0.001f)
                 return;
 
             StopAllMovement();
-            
+    
             if (animate)
-                Tween.LocalPosition(transform, targetPos, duration: 0.35f, ease: Ease.OutQuad);
+                Tween.Position(transform, targetWorldPos, duration: 0.35f, ease: Ease.OutQuad);
             else
-                transform.localPosition = targetPos;
+                transform.position = targetWorldPos;
         }
 
         public void OnRelease()
         {
             StopAllMovement();
-            transform.localScale = Vector3.one;
+            transform.localScale = DefaultScale;
             
             SetState(ObjectState.None);
         }

@@ -88,6 +88,7 @@ namespace Managers
             _currentLevelNumber = levelNumber;
             
             ClearLevel();
+            LevelScreen.CloseSubscreens();
 
             var levelFile = Resources.Load<TextAsset>($"Levels/level{levelNumber}");
             if (levelFile == null)
@@ -144,7 +145,8 @@ namespace Managers
                 State = LevelState.Win;
                 Debug.Log("LevelManager: WIN STATE! Level Cleared.");
                 
-                GameManager.Instance.LevelCompleted();
+                // todo: allocates?
+                LevelScreen.ShowWinScreen();
             }
         }
 
@@ -154,8 +156,8 @@ namespace Managers
                 return;
 
             State = LevelState.Fail;
-            Debug.Log("LevelManager: FAIL STATE! Stack is full.");
-            // todo: Trigger Fail UI / Prompt Restart
+            
+            LevelScreen.ShowLoseScreen();
         }
         
         public void UndoLastMove()

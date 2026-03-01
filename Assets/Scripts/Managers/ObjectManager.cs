@@ -9,8 +9,6 @@ namespace Managers
 {
     public class ObjectManager : MonoBehaviour, IManualUpdate
     {
-        public Transform ActiveObjectsContainer;
-        
         private List<Sprite> _availableItemSprites = new List<Sprite>();
 
         private void Awake()
@@ -49,7 +47,6 @@ namespace Managers
                     var slot = openSlots[Random.Range(0, openSlots.Count)];
                     var obj = GamePools.Instance.ObjectViewPool.Get();
                     
-                    obj.transform.SetParent(ActiveObjectsContainer, false);
                     obj.gameObject.layer = LayerMask.NameToLayer("Interactable");
                     obj.transform.localScale = obj.DefaultScale;
                     

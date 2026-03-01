@@ -9,9 +9,6 @@ namespace Managers
 {
     public class ShelfManager : MonoBehaviour, IManualUpdate
     {
-        [Header("References")]
-        public Transform EnvironmentContainer;
-
         [Header("Layout Settings")]
         public float ShelfSpacingY;
         public float ItemVisualWidth;
@@ -37,8 +34,6 @@ namespace Managers
         
         public void GenerateShelves(List<ShelfData> shelfDataList)
         {
-            EnvironmentContainer.localScale = Vector3.one;
-
             var totalShelves = shelfDataList.Count;
             var startY = (totalShelves - 1) * ShelfSpacingY / 2f;
             var maxActualWidth = 0f;
@@ -53,7 +48,6 @@ namespace Managers
                 var spawnPos = new Vector3(0, startY - (i * ShelfSpacingY), 0);
                 
                 var newShelf = GamePools.Instance.ShelfViewPool.Get();
-                newShelf.transform.SetParent(EnvironmentContainer);
                 newShelf.transform.localPosition = spawnPos;
             
                 newShelf.Init(i, data, ItemVisualWidth);

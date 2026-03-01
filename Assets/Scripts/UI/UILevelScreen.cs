@@ -5,9 +5,6 @@ namespace UI
 {
     public class UILevelScreen : MonoBehaviour
     {
-        public SpriteRenderer TopPanel;    
-        public SpriteRenderer StackPanel; 
-        
         public UIButton UndoButton;
         public UIButton RestartButton;
 

@@ -49,10 +49,6 @@ namespace Managers
             // Iterate through our cameras in order of priority
             foreach (var group in InputGroups)
             {
-                if (group.ReferenceCamera == null || 
-                    !group.ReferenceCamera.gameObject.activeInHierarchy) 
-                    continue;
-
                 var worldPosition = group.ReferenceCamera.ScreenToWorldPoint(screenPosition);
                 
                 var hitCollider = Physics2D.OverlapCircle(worldPosition, _touchRadius, group.InteractableMask);
@@ -69,6 +65,8 @@ namespace Managers
                         
                         _hoveredInteractable.InteractDown();
                         
+                        // Return if you hit some target in priority 
+                        // Prevents multiple interactions on a single click
                         return; 
                     }
                 }

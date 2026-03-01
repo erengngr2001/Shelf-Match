@@ -45,7 +45,9 @@ namespace Managers
                 var currentShelfWidth = data.Width * ItemVisualWidth;
                 if (currentShelfWidth > maxActualWidth) maxActualWidth = currentShelfWidth;
 
-                var spawnPos = new Vector3(0, startY - (i * ShelfSpacingY), 0);
+                // y: +15f is there because the bottom of screen is the stack area
+                // so, the shelves should be initialized not from middle of the screen but a bit higher
+                var spawnPos = new Vector3(0, startY - (i * ShelfSpacingY) + 15f, 0);
                 
                 var newShelf = GamePools.Instance.ShelfViewPool.Get();
                 newShelf.transform.localPosition = spawnPos;

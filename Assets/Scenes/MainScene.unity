@@ -1045,7 +1045,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b65fd1231257c174686de8690c051a16, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ActiveObjectsContainer: {fileID: 0}
 --- !u!1 &1458789628
 GameObject:
   m_ObjectHideFlags: 0
@@ -1303,7 +1302,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 07b259352827f58478fdc1e979e216e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  EnvironmentContainer: {fileID: 403861222}
   ShelfSpacingY: 17
   ItemVisualWidth: 9
   MaxPlayAreaWidth: 40

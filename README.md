@@ -1,2 +1,2 @@
 # Shelf-Match
-Bold Games Case Study
+Match3 concept with an item stack
